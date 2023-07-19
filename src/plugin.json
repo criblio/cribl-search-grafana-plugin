@@ -15,7 +15,16 @@
       "large": "img/cribl_logo.svg"
     },
     "links": [],
-    "screenshots": [],
+    "screenshots": [
+      {
+        "name": "Configuration",
+        "path": "img/screenshot_config.png"
+      },
+      {
+        "name": "Querying",
+        "path": "img/screenshot_query.png"
+      }
+    ],
     "version": "%VERSION%",
     "updated": "%TODAY%"
   },
