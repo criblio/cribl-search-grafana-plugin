@@ -3,10 +3,9 @@
 PLUGIN_ID=$(grep '"id"' < src/plugin.json | sed -E 's/.*"id" *: *"(.*)".*/\1/')
 echo "Validating the ${PLUGIN_ID} plugin"
 
-if [ ! -d dist ]; then
-  echo "Building the plugin first"
-  yarn build
-fi
+echo "[Re]building the plugin"
+rm -rf dist
+yarn build
 
 cleanup () {
   rm -rf ${PLUGIN_ID} ${PLUGIN_ID}.zip
