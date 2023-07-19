@@ -1,6 +1,8 @@
-# Grafana data source plugin template
+# Cribl Search Grafana Plugin
 
-This template is a starting point for building a Data Source Plugin for Grafana.
+This is a Data Source Plugin for Grafana that pulls from Cribl Search.
+
+NOTE: The rest of this README was auto-generated via `npx @grafana/create-plugin@latest`.  All Cribl-specific code and config lives in `src`.
 
 ## What are Grafana data source plugins?
 
