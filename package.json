@@ -1,5 +1,5 @@
 {
-  "name": "cribl-search-datasource-plugin",
+  "name": "criblcloud-search-datasource-plugin",
   "version": "1.0.0",
   "description": "Cribl Search DataSource Plugin",
   "scripts": {
