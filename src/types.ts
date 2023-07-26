@@ -20,7 +20,7 @@ export interface CriblQuery extends DataQuery {
  */
 export interface CriblDataSourceOptions extends DataSourceJsonData {
   /**
-   * Base URL to the Cribl organization/tenant site (i.e. https://main-elated-nash-dkf9udv.cribl-staging.cloud)
+   * Base URL to the Cribl organization/tenant site (i.e. https://your-org-id.cribl.cloud)
    */
   criblOrgBaseUrl: string;
   /**
