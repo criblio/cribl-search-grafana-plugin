@@ -12,6 +12,7 @@ export function ConfigEditor(props: Props) {
     onOptionsChange({
       ...options,
       jsonData: {
+        ...options.jsonData,
         criblOrgBaseUrl: parseCriblOrgBaseUrl(event.target.value),
       },
     });
