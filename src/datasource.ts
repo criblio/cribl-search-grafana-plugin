@@ -68,7 +68,7 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
       const data = response.data as string;
       let lines = data.split('\n');
       for (let lineIdx = 0; lineIdx < lines.length && eventCount < maxEventCount; ++lineIdx) {
-        if (lines[lineIdx].length === 0) {
+        if (lines[lineIdx].length === 0) { // The data has a trailing newline, and split yields a blank line at the end
           continue;
         }
         const event = JSON.parse(lines[lineIdx]);
