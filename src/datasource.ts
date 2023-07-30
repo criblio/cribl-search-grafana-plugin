@@ -14,6 +14,7 @@ import { CriblQuery, CriblDataSourceOptions } from './types';
 
 const QUERY_PAGE_SIZE = 1000;
 const CRIBL_TIME_FIELD = '_time';
+const MAX_DELAY_WAITING_FOR_FINISHED = 60000;
 
 /**
  * Cribl Search DataSource
@@ -45,6 +46,12 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
     let eventCount = 0;
     let totalEventCount: number | undefined = undefined;
     let maxEventCount = criblQuery.maxResults ?? Number.MAX_VALUE;
+    let startTime = Date.now();
+
+    // Initially we're simply trying to load the most recent results for the given saved search
+    let queryParams: any = {
+      queryId: criblQuery.savedQueryId,
+    };
 
     // Load the search results, paging through until we've hit maxResults or read them all, whatever comes first
     do {
@@ -55,7 +62,7 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
           headers: { ...authorization },
           responseType: 'text', // tell Grafana not to bother trying to JSON parse it, it's NDJSON
           params: {
-            queryId: criblQuery.savedQueryId,
+            ...queryParams,
             offset: eventCount,
             limit: Math.min(maxEventCount, QUERY_PAGE_SIZE),
           },
@@ -66,18 +73,47 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
 
       // Parse the NDJSON lines
       const data = response.data as string;
-      let lines = data.split('\n');
-      for (let lineIdx = 0; lineIdx < lines.length && eventCount < maxEventCount; ++lineIdx) {
+      const lines = data.split('\n');
+
+      // First NDJSON line is our "header"
+      const header = JSON.parse(lines[0]);
+
+      // After the first request, start passing jobId instead of queryId.  This serves two key purposes:
+      //
+      // 1. Ensure we don't mix result sets from different jobs.  This could happen if a scheduled search runs right in the
+      // middle of when we're paging through results.  Once we get our first response, we lock to that job id, preventing
+      // wires from getting crossed.
+      //
+      // 2. As you'll see below, it's possible that there weren't any results yet for the referenced search, and a new job
+      // may have been kicked off.  We'll need to poll until that job has finished, and we need the job ID for that anyway.
+
+      if (header.job?.id == null) {
+        // Never expected to happen, but just in case, let's throw to prevent a screwy loop
+        throw new Error(`Unexpected error: response header line has no job id`);
+      }
+      queryParams = {
+        jobId: header.job.id,
+      }
+
+      // Normally what we expect when we're simply fetching results from a job that already completed (i.e. scheduled search)
+      // is isFinished=true, and we can trust totalEventCount as final.  If there were no cached results, Cribl kicks off a
+      // new job, and we get isFinished=false.  When this is the case, grab the job ID and poll until the job is finished.
+      if (!header.isFinished) {
+        if (Date.now() - startTime >= MAX_DELAY_WAITING_FOR_FINISHED) {
+          throw new Error(`Job ${header.job.id} still not finished after ${Date.now() - startTime}ms`);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 250)); // Give it a bit of time to finish
+        continue;
+      }
+
+      // The job is finished, so we can trust totalEventCount now, and we can proceed with getting the results
+      totalEventCount = header.totalEventCount;
+
+      for (let lineIdx = 1; lineIdx < lines.length && eventCount < maxEventCount; ++lineIdx) {
         if (lines[lineIdx].length === 0) { // The data has a trailing newline, and split yields a blank line at the end
           continue;
         }
         const event = JSON.parse(lines[lineIdx]);
-
-        // First NDJSON line is our "header"
-        if (lineIdx === 0) {
-          totalEventCount = event.totalEventCount;
-          continue;
-        }
 
         // Grab the keys and values from the event and append them to our DataFrame
         for (const key of Object.keys(event)) {
@@ -120,7 +156,7 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
 
         ++eventCount;
       }
-    } while (eventCount < maxEventCount && eventCount < (totalEventCount ?? 0));
+    } while (eventCount < maxEventCount && (totalEventCount == null || eventCount < totalEventCount));
 
     return {
       refId: criblQuery.refId,
