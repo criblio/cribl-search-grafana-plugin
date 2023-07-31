@@ -11,8 +11,11 @@ export function QueryEditor({ query, onChange, onRunQuery }: Props) {
   const debouncedOnRunQuery = useRef(debounce(onRunQuery, 750)).current;
 
   const onSavedQueryIdChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...query, savedQueryId: event.target.value });
-    debouncedOnRunQuery();
+    const v = event.target.value.replace(/\s+/g, ''); // auto-trim/remove any whitespace
+    onChange({ ...query, savedQueryId: v });
+    if (v.match(/^[a-zA-Z0-9_]+$/)) {
+        debouncedOnRunQuery();
+    }
   };
 
   const onMaxResultsChange = (event: ChangeEvent<HTMLInputElement>) => {
