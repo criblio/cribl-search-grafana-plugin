@@ -16,7 +16,7 @@ export function QueryEditor({ query, onChange, onRunQuery }: Props) {
   };
 
   const onMaxResultsChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...query, maxResults: +event.target.value });
+    onChange({ ...query, maxResults: Math.max(1, +event.target.value) });
     debouncedOnRunQuery();
   };
 
