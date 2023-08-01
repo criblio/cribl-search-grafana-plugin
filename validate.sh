@@ -5,7 +5,7 @@ echo "Validating the ${PLUGIN_ID} plugin"
 
 echo "[Re]building the plugin"
 rm -rf dist
-yarn build
+npm run build
 
 cleanup () {
   rm -rf ${PLUGIN_ID} ${PLUGIN_ID}.zip
