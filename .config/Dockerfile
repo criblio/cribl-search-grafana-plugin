@@ -1,5 +1,5 @@
 ARG grafana_version=latest
-ARG grafana_image=grafana-enterprise
+ARG grafana_image=grafana-oss
 
 FROM grafana/${grafana_image}:${grafana_version}
 
@@ -10,6 +10,8 @@ ENV GF_AUTH_ANONYMOUS_ENABLED "true"
 ENV GF_AUTH_BASIC_ENABLED "false"
 # Set development mode so plugins can be loaded without the need to sign
 ENV GF_DEFAULT_APP_MODE "development"
+# Deconflict with port 3000 running Cribl locally as well as Grafana
+ENV GF_SERVER_HTTP_PORT "3333"
 
 # Inject livereload script into grafana index.html
 USER root
