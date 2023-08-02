@@ -1,6 +1,6 @@
 # Grafana Cribl Plugin
 
-Welcome to the Grafana Cribl plugin README. This plugin empowers you to create Grafana data sources pulling data directly from Cribl Search, with the resulting data visualizations offering insights like never before. Let's get into how to set this up.
+Welcome to the Grafana Cribl plugin README. This plugin empowers you to create Grafana data sources pulling data directly from [Cribl Search](https://cribl.io/search/), with the resulting data visualizations offering insights like never before. Let's get into how to set this up.
 
 ## How It Works
 

@@ -1,8 +1,15 @@
 # Cribl Search Grafana Plugin
 
 This is a Data Source Plugin for Grafana that pulls from Cribl Search.
+https://cribl.io/search/
 
-NOTE: The rest of this README was auto-generated via `npx @grafana/create-plugin@latest`.  All Cribl-specific code and config lives in `src`.
+NOTE: The rest of this README was auto-generated via `npx @grafana/create-plugin@latest`.  This particular README provides
+some generalized guidance on _Grafana plugin development_.
+
+To learn more about the plugin from the an end user perspective, please refer to [src/README.md](src/README.md), which is
+the same info users see in the Grafana UI.
+
+All Cribl-specific source code and config lives in [src](src).
 
 ## What are Grafana data source plugins?
 

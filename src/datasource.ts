@@ -55,18 +55,18 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
 
     // Load the search results, paging through until we've hit maxResults or read them all, whatever comes first
     do {
-      const response = await this.getAuthorization() // refresh auth token as needed
-        .then((authorization) => lastValueFrom(getBackendSrv().fetch({
-          method: 'GET',
-          url: this.proxiedUrl('query'),
-          headers: { ...authorization },
-          responseType: 'text', // tell Grafana not to bother trying to JSON parse it, it's NDJSON
-          params: {
-            ...queryParams,
-            offset: eventCount,
-            limit: Math.min(maxEventCount, QUERY_PAGE_SIZE),
-          },
-        })));
+      const authorization = await this.getAuthorization(); // refresh auth token as needed
+      const response = await lastValueFrom(getBackendSrv().fetch({
+        method: 'GET',
+        url: this.proxiedUrl('query'),
+        headers: { ...authorization },
+        responseType: 'text', // tell Grafana not to bother trying to JSON parse it, it's NDJSON
+        params: {
+          ...queryParams,
+          offset: eventCount,
+          limit: Math.min(maxEventCount, QUERY_PAGE_SIZE),
+        },
+      }));
       if (response.status !== 200) {
         throw new Error(`Unexpected response status (${response.status})`);
       }
@@ -210,24 +210,23 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
    * @returns an object with status and message
    */
   async testDatasource(): Promise<{ status: string, message: string }> {
-    return this.getAuthorization()
-      .then((authorization) => lastValueFrom(getBackendSrv().fetch<any>({
+    try {
+      const authorization = await this.getAuthorization();
+      await lastValueFrom(getBackendSrv().fetch<any>({
         method: 'HEAD',
         url: this.proxiedUrl('testDatasource'),
         headers: { ...authorization },
-      })))
-      .then((_) => {
-        return {
-          status: 'success',
-          message: 'Your Cribl data source is working properly.',
-        };
-      })
-      .catch((err) => {
-        return {
-          status: 'error',
-          message: JSON.stringify(err, Object.getOwnPropertyNames(err)),
-        };
-      });
+      }));
+      return {
+        status: 'success',
+        message: 'Your Cribl data source is working properly.',
+      };
+    } catch (err) {
+      return {
+        status: 'error',
+        message: JSON.stringify(err, Object.getOwnPropertyNames(err)),
+      };
+    }
   }
 
   /**
