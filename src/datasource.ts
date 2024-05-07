@@ -206,14 +206,14 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
   /**
    * Test the datasource, given its current configuration.  A successful test entails:
    * 1. Get an auth token.
-   * 2. Hit the API with a simple HEAD request, ensuring the config & auth token are both valid.
+   * 2. Hit the API with a simple GET request, ensuring the config & auth token are both valid.
    * @returns an object with status and message
    */
   async testDatasource(): Promise<{ status: string, message: string }> {
     try {
       const authorization = await this.getAuthorization();
       await lastValueFrom(getBackendSrv().fetch<any>({
-        method: 'HEAD',
+        method: 'GET',
         url: this.proxiedUrl('testDatasource'),
         headers: { ...authorization },
       }));
