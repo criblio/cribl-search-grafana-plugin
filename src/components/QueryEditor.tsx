@@ -1,20 +1,23 @@
-import React, { ChangeEvent, useRef } from 'react';
-import { InlineField, Input } from '@grafana/ui';
-import { QueryEditorProps } from '@grafana/data';
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
+import { InlineField, Input, Select } from '@grafana/ui';
+import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { CriblDataSource } from '../datasource';
 import { CriblDataSourceOptions, CriblQuery } from '../types';
 import { debounce } from 'lodash';
 
 type Props = QueryEditorProps<CriblDataSource, CriblQuery, CriblDataSourceOptions>;
 
-export function QueryEditor({ query, onChange, onRunQuery }: Props) {
-  const debouncedOnRunQuery = useRef(debounce(onRunQuery, 750)).current;
+export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) {
+  const { maxResults } = query;
 
-  const onSavedQueryIdChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const v = event.target.value.replace(/\s+/g, ''); // auto-trim/remove any whitespace
-    onChange({ ...query, savedQueryId: v });
+  const debouncedOnRunQuery = useRef(debounce(onRunQuery, 750)).current;
+  const [savedSearchIdOptions, setSavedSearchIdOptions] = useState<SelectableValue[]>([]);
+
+  const onSavedQueryIdChange = (sv: SelectableValue<string>) => {
+    const v = sv.value?.replace(/\s+/g, '') ?? ''; // auto-trim/remove any whitespace
     if (v.match(/^[a-zA-Z0-9_]+$/)) {
-        debouncedOnRunQuery();
+      onChange({ ...query, savedSearchId: v });
+      debouncedOnRunQuery();
     }
   };
 
@@ -23,12 +26,24 @@ export function QueryEditor({ query, onChange, onRunQuery }: Props) {
     debouncedOnRunQuery();
   };
 
-  const { savedQueryId, maxResults } = query;
+  // Load the saved search IDs, let the user just pick one
+  useEffect(() => {
+    const loadSavedSearchIds = async () => {
+      const savedSearchIds = await datasource.loadSavedSearchIds();
+      const defaultOption = { label: '', value: '' };
+      const options = [
+        defaultOption,
+        ...savedSearchIds.map((value) => ({ value, label: value })),
+      ];
+      setSavedSearchIdOptions(options);
+    };
+    loadSavedSearchIds();
+  }, [datasource]);
 
   return (
     <div className="gf-form">
       <InlineField label="Saved Search ID" labelWidth={24} tooltip="ID of the Cribl saved search">
-        <Input onChange={onSavedQueryIdChange} value={savedQueryId ?? ''} width={24} type="string" />
+        <Select onChange={onSavedQueryIdChange} options={savedSearchIdOptions} width={24} />
       </InlineField>
       <InlineField label="Max Results" labelWidth={24} tooltip="Max results to fetch">
         <Input onChange={onMaxResultsChange} value={maxResults ?? 1000} width={24} type="number" />
