@@ -29,13 +29,16 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
   // Load the saved search IDs, let the user just pick one
   useEffect(() => {
     const loadSavedSearchIds = async () => {
-      const savedSearchIds = await datasource.loadSavedSearchIds();
-      const defaultOption = { label: '', value: '' };
-      const options = [
-        defaultOption,
-        ...savedSearchIds.map((value) => ({ value, label: value })),
-      ];
-      setSavedSearchIdOptions(options);
+      try {
+        const savedSearchIds = await datasource.loadSavedSearchIds();
+        const options = [
+          { label: '', value: '' },
+          ...savedSearchIds.map((value) => ({ value, label: value })),
+        ];
+        setSavedSearchIdOptions(options);
+      } catch (err) {
+        console.log(`Failed to load saved search IDs: ${err}`);
+      }
     };
     loadSavedSearchIds();
   }, [datasource]);
