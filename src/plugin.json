@@ -80,7 +80,7 @@
       }
     },
     {
-      "path": "testDatasource",
+      "path": "savedSearches",
       "url": "{{ .JsonData.criblOrgBaseUrl }}/api/v1/m/default_search/search/saved"
     },
     {

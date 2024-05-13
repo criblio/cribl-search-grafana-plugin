@@ -27,7 +27,7 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
   }
 
   /**
-   * Run a query, loading the most recent results for the given savedQueryId
+   * Run a query, loading the most recent results for the given savedSearchId
    * @param options the options for this query
    * @returns the DataQueryResponse containing DataFrame(s)
    */
@@ -50,7 +50,7 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
 
     // Initially we're simply trying to load the most recent results for the given saved search
     let queryParams: any = {
-      queryId: criblQuery.savedQueryId,
+      queryId: criblQuery.savedSearchId,
     };
 
     // Load the search results, paging through until we've hit maxResults or read them all, whatever comes first
@@ -206,17 +206,12 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
   /**
    * Test the datasource, given its current configuration.  A successful test entails:
    * 1. Get an auth token.
-   * 2. Hit the API with a simple GET request, ensuring the config & auth token are both valid.
+   * 2. Hit the API to load saved searches, ensuring the config & auth token are both valid.
    * @returns an object with status and message
    */
   async testDatasource(): Promise<{ status: string, message: string }> {
     try {
-      const authorization = await this.getAuthorization();
-      await lastValueFrom(getBackendSrv().fetch<any>({
-        method: 'GET',
-        url: this.proxiedUrl('testDatasource'),
-        headers: { ...authorization },
-      }));
+      await this.loadSavedSearchIds();
       return {
         status: 'success',
         message: 'Your Cribl data source is working properly.',
@@ -227,6 +222,24 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
         message: JSON.stringify(err, Object.getOwnPropertyNames(err)),
       };
     }
+  }
+
+  /**
+   * Load the list of saved search IDs available to the user corresponding to the API creds.
+   * This can be used to populate a dropdown to make it easy for the user to pick one.
+   * @returns a list of saved search IDs
+   */
+  async loadSavedSearchIds(): Promise<string[]> {
+    const authorization = await this.getAuthorization();
+    const response = await lastValueFrom(getBackendSrv().fetch<any>({
+      method: 'GET',
+      url: this.proxiedUrl('savedSearches'),
+      headers: { ...authorization },
+    }));
+    if (response.status !== 200) {
+      throw new Error(`Unexpected response status (${response.status})`);
+    }
+    return response.data?.items.map((item: any) => item.id) ?? [];
   }
 
   /**

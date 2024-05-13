@@ -8,7 +8,7 @@ export interface CriblQuery extends DataQuery {
   /**
    * ID of the Cribl saved search
    */
-  savedQueryId: string;
+  savedSearchId: string;
   /**
    * Max number of results to fetch
    */
