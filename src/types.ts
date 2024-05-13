@@ -2,18 +2,28 @@ import { DataSourceJsonData } from '@grafana/data';
 import { DataQuery } from '@grafana/schema';
 
 /**
- * Query used with Cribl Search
+ * Query used with Cribl Search.  Can either use a saved search or run an adhoc query.
  */
-export interface CriblQuery extends DataQuery {
-  /**
-   * ID of the Cribl saved search
-   */
-  savedSearchId: string;
+export type CriblQuery = DataQuery & {
   /**
    * Max number of results to fetch
    */
   maxResults: number;
-}
+} & (
+  {
+    type: 'adhoc';
+    /**
+     * Ad-hoc query (Kusto)
+     */
+    query: string;
+  } | {
+    type: 'saved';
+    /**
+     * ID of the Cribl saved search
+     */
+    savedSearchId: string;
+  }
+);
 
 /**
  * Options configured for each CriblDataSource instance

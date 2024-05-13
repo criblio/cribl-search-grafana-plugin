@@ -49,9 +49,9 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
     let startTime = Date.now();
 
     // Initially we're simply trying to load the most recent results for the given saved search
-    let queryParams: any = {
-      queryId: criblQuery.savedSearchId,
-    };
+    let queryParams: any = criblQuery.type === 'saved'
+      ? { queryId: criblQuery.savedSearchId }
+      : { query: prependCriblOperator(criblQuery.query), earliest: '-1h', latest: 'now' }; // TODO: earliest/latest
 
     // Load the search results, paging through until we've hit maxResults or read them all, whatever comes first
     do {
@@ -345,4 +345,11 @@ function parseJwtExp(token: string): number {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
   }).join(''));
   return JSON.parse(jsonPayload).exp;
+}
+
+function prependCriblOperator(query: string): string {
+  if (query.trim().startsWith('print')) {
+    return query;
+  }
+  return `cribl ${query}`; // TODO: make this not dumb
 }

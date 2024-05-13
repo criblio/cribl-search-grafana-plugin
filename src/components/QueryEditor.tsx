@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
+import React, { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { InlineField, Input, Select } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { CriblDataSource } from '../datasource';
@@ -7,16 +7,48 @@ import { debounce } from 'lodash';
 
 type Props = QueryEditorProps<CriblDataSource, CriblQuery, CriblDataSourceOptions>;
 
+const queryTypeOptions = ['saved', 'adhoc'].map((value) => ({ label: value, value }));
+
 export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) {
   const { maxResults } = query;
 
   const debouncedOnRunQuery = useRef(debounce(onRunQuery, 750)).current;
   const [savedSearchIdOptions, setSavedSearchIdOptions] = useState<SelectableValue[]>([]);
+  const [savedSearchId, setSavedSearchId] = useState('');
+
+  const [queryType, setQueryType] = useState('saved');
+  const [adhocQuery, setAdhocQuery] = useState('');
+
+  const onQueryTypeChange = (sv: SelectableValue<string>) => {
+    const newQueryType = sv.value ?? 'saved';
+    setQueryType(newQueryType);
+    if (newQueryType === 'saved') {
+      onChange({ ...query, type: 'saved', savedSearchId });
+    } else {
+      onChange({ ...query, type: 'adhoc', query: adhocQuery });
+    }
+  };
+
+  const onAdhocQueryChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const newQuery = event.target.value;
+    setAdhocQuery(newQuery);
+    if (newQuery.trim().length > 3) {
+      onChange({ ...query, type: 'adhoc', query: newQuery });
+      // Don't run it automatically, the user can hit Enter or click "Run query" when ready
+    }
+  };
+
+  const onAdhocQueryKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      onRunQuery();
+    }
+  };
 
   const onSavedQueryIdChange = (sv: SelectableValue<string>) => {
-    const v = sv.value?.replace(/\s+/g, '') ?? ''; // auto-trim/remove any whitespace
-    if (v.match(/^[a-zA-Z0-9_]+$/)) {
-      onChange({ ...query, savedSearchId: v });
+    const newSavedSearchId = sv.value?.replace(/\s+/g, '') ?? ''; // auto-trim/remove any whitespace
+    setSavedSearchId(newSavedSearchId);
+    if (newSavedSearchId.match(/^[a-zA-Z0-9_]+$/)) {
+      onChange({ ...query, type: 'saved', savedSearchId: newSavedSearchId });
       debouncedOnRunQuery();
     }
   };
@@ -31,11 +63,7 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
     const loadSavedSearchIds = async () => {
       try {
         const savedSearchIds = await datasource.loadSavedSearchIds();
-        const options = [
-          { label: '', value: '' },
-          ...savedSearchIds.map((value) => ({ value, label: value })),
-        ];
-        setSavedSearchIdOptions(options);
+        setSavedSearchIdOptions(['', ...savedSearchIds].map((value) => ({ value, label: value })));
       } catch (err) {
         console.log(`Failed to load saved search IDs: ${err}`);
       }
@@ -43,12 +71,25 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
     loadSavedSearchIds();
   }, [datasource]);
 
+  const getQueryUI = () => {
+    if (queryType === 'saved') {
+      return <InlineField label="Saved Search" labelWidth={16} tooltip="ID of the Cribl saved search">
+        <Select onChange={onSavedQueryIdChange} options={savedSearchIdOptions} value={savedSearchId} width={24} />
+      </InlineField>;
+    } else {
+      return <InlineField label="Query" labelWidth={10} tooltip="Cribl Search query (Kusto)">
+        <Input onChange={onAdhocQueryChange} onKeyDown={onAdhocQueryKeyDown} value={adhocQuery} width={64} type="string" />
+      </InlineField>;
+    }
+  };
+
   return (
     <div className="gf-form">
-      <InlineField label="Saved Search ID" labelWidth={24} tooltip="ID of the Cribl saved search">
-        <Select onChange={onSavedQueryIdChange} options={savedSearchIdOptions} width={24} />
+      <InlineField label="Query Type" labelWidth={12}>
+        <Select onChange={onQueryTypeChange} options={queryTypeOptions} value={queryType} width={12} />
       </InlineField>
-      <InlineField label="Max Results" labelWidth={24} tooltip="Max results to fetch">
+      {getQueryUI()}
+      <InlineField label="Max Results" labelWidth={16} tooltip="Max results to fetch">
         <Input onChange={onMaxResultsChange} value={maxResults ?? 1000} width={24} type="number" />
       </InlineField>
     </div>
