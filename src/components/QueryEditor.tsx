@@ -32,10 +32,8 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
   const onAdhocQueryChange = (event: ChangeEvent<HTMLInputElement>) => {
     const newQuery = event.target.value;
     setAdhocQuery(newQuery);
-    if (newQuery.trim().length > 3) {
-      onChange({ ...query, type: 'adhoc', query: newQuery });
-      // Don't run it automatically, the user can hit Enter or click "Run query" when ready
-    }
+    onChange({ ...query, type: 'adhoc', query: newQuery });
+    // Don't run it automatically, the user can hit Enter or click "Run query" when ready
   };
 
   const onAdhocQueryKeyDown = (event: KeyboardEvent) => {
