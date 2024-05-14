@@ -10,8 +10,6 @@ type Props = QueryEditorProps<CriblDataSource, CriblQuery, CriblDataSourceOption
 const queryTypeOptions = ['saved', 'adhoc'].map((value) => ({ label: value, value }));
 
 export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) {
-  const { maxResults } = query;
-
   const debouncedOnRunQuery = useRef(debounce(onRunQuery, 750)).current;
   const [savedSearchIdOptions, setSavedSearchIdOptions] = useState<SelectableValue[]>([]);
   const [savedSearchId, setSavedSearchId] = useState('');
@@ -51,11 +49,6 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
     }
   };
 
-  const onMaxResultsChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...query, maxResults: Math.max(1, +event.target.value) });
-    debouncedOnRunQuery();
-  };
-
   // Load the saved search IDs, let the user just pick one
   useEffect(() => {
     const loadSavedSearchIds = async () => {
@@ -87,9 +80,6 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
         <Select onChange={onQueryTypeChange} options={queryTypeOptions} value={queryType} width={12} />
       </InlineField>
       {getQueryUI()}
-      <InlineField label="Max Results" labelWidth={16} tooltip="Max results to fetch">
-        <Input onChange={onMaxResultsChange} value={maxResults ?? 1000} width={24} type="number" />
-      </InlineField>
     </div>
   );
 }
