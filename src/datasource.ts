@@ -50,7 +50,6 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
     let totalEventCount: number | undefined = undefined;
     let startTime = Date.now();
 
-    // Initially we're simply trying to load the most recent results for the given saved search
     let queryParams: any = criblQuery.type === 'saved'
       ? { queryId: criblQuery.savedSearchId }
       : {
