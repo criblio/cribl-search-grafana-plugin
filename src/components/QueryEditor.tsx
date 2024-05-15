@@ -14,8 +14,8 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
   const [savedSearchIdOptions, setSavedSearchIdOptions] = useState<SelectableValue[]>([]);
   const [savedSearchId, setSavedSearchId] = useState('');
 
-  const [queryType, setQueryType] = useState('saved');
-  const [adhocQuery, setAdhocQuery] = useState('');
+  const [queryType, setQueryType] = useState(query.type as string);
+  const [adhocQuery, setAdhocQuery] = useState(query.type === 'adhoc' ? query.query : '');
 
   const onQueryTypeChange = (sv: SelectableValue<string>) => {
     const newQueryType = sv.value ?? 'saved';
