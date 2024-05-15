@@ -1,6 +1,6 @@
-import { prependCriblOperator } from "datasource";
+import { prependCriblOperator } from "utils";
 
-describe('datasource', () => {
+describe('utils', () => {
   describe('prependCriblOperator', () => {
     [
       {
@@ -58,6 +58,15 @@ describe('datasource', () => {
       {
         query: 'let stage1 = foo; let stage2 = cribl bar; set baz="biff"; dataset="$vt_dummy" event < 10',
         expected: 'let stage1 = foo; let stage2 = cribl bar; set baz="biff"; cribl dataset="$vt_dummy" event < 10',
+      },
+      // These should never be run in this context, but at least we don't prepend cribl
+      {
+        query: '.show all queries',
+        expected: '.show all queries',
+      },
+      {
+        query: '.show objects(cribl_search_sample)',
+        expected: '.show objects(cribl_search_sample)',
       },
     ].forEach(({ query, expected }) => {
       it(`should prepend cribl as needed: ${query}`, () => {
