@@ -4,12 +4,7 @@ import { DataQuery } from '@grafana/schema';
 /**
  * Query used with Cribl Search.  Can either use a saved search or run an adhoc query.
  */
-export type CriblQuery = DataQuery & {
-  /**
-   * Max number of results to fetch
-   */
-  maxResults: number;
-} & (
+export type CriblQuery = DataQuery & (
   {
     type: 'adhoc';
     /**

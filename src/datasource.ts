@@ -12,6 +12,7 @@ import { getBackendSrv } from '@grafana/runtime';
 import { lastValueFrom } from 'rxjs';
 import { CriblQuery, CriblDataSourceOptions } from './types';
 
+const MAX_RESULTS = 10000; // same as what the actual Cribl UI imposes
 const QUERY_PAGE_SIZE = 1000;
 const CRIBL_TIME_FIELD = '_time';
 const MAX_DELAY_WAITING_FOR_FINISHED = 60000;
@@ -45,7 +46,6 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
     let fields: Record<string, Field> = {};
     let eventCount = 0;
     let totalEventCount: number | undefined = undefined;
-    let maxEventCount = criblQuery.maxResults ?? Number.MAX_VALUE;
     let startTime = Date.now();
 
     // Initially we're simply trying to load the most recent results for the given saved search
@@ -53,7 +53,7 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
       ? { queryId: criblQuery.savedSearchId }
       : { query: prependCriblOperator(criblQuery.query), earliest: '-1h', latest: 'now' }; // TODO: earliest/latest
 
-    // Load the search results, paging through until we've hit maxResults or read them all, whatever comes first
+    // Load the search results, paging through until we've hit MAX_RESULTS or read them all, whatever comes first
     do {
       const authorization = await this.getAuthorization(); // refresh auth token as needed
       const response = await lastValueFrom(getBackendSrv().fetch({
@@ -64,7 +64,7 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
         params: {
           ...queryParams,
           offset: eventCount,
-          limit: Math.min(maxEventCount, QUERY_PAGE_SIZE),
+          limit: QUERY_PAGE_SIZE,
         },
       }));
       if (response.status !== 200) {
@@ -109,7 +109,7 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
       // The job is finished, so we can trust totalEventCount now, and we can proceed with getting the results
       totalEventCount = header.totalEventCount;
 
-      for (let lineIdx = 1; lineIdx < lines.length && eventCount < maxEventCount; ++lineIdx) {
+      for (let lineIdx = 1; lineIdx < lines.length && eventCount < MAX_RESULTS; ++lineIdx) {
         if (lines[lineIdx].length === 0) { // The data has a trailing newline, and split yields a blank line at the end
           continue;
         }
@@ -156,7 +156,7 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
 
         ++eventCount;
       }
-    } while (eventCount < maxEventCount && (totalEventCount == null || eventCount < totalEventCount));
+    } while (eventCount < MAX_RESULTS && (totalEventCount == null || eventCount < totalEventCount));
 
     return {
       refId: criblQuery.refId,
