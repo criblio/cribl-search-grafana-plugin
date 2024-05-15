@@ -13,6 +13,7 @@ import { getBackendSrv } from '@grafana/runtime';
 import { lastValueFrom } from 'rxjs';
 import { CriblQuery, CriblDataSourceOptions } from './types';
 import { createGetBackoff } from 'backoff';
+import { prependCriblOperator } from 'utils';
 
 const MAX_RESULTS = 10000; // same as what the actual Cribl UI imposes
 const QUERY_PAGE_SIZE = 1000;
@@ -51,7 +52,6 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
     let totalEventCount: number | undefined = undefined;
     let startTime = Date.now();
 
-    // Initially we're simply trying to load the most recent results for the given saved search
     let queryParams: any = criblQuery.type === 'saved'
       ? { queryId: criblQuery.savedSearchId }
       : {
@@ -112,6 +112,10 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
         }
         await new Promise((resolve) => setTimeout(resolve, getBackoff())); // Give it a bit of time to finish
         continue;
+      }
+
+      if (header.job.status !== 'completed') {
+        throw new Error(`Job ${header.job.id} ended with status ${header.job.status}`);
       }
 
       // The job is finished, so we can trust totalEventCount now, and we can proceed with getting the results
@@ -353,11 +357,4 @@ function parseJwtExp(token: string): number {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
   }).join(''));
   return JSON.parse(jsonPayload).exp;
-}
-
-function prependCriblOperator(query: string): string {
-  if (query.trim().startsWith('print')) {
-    return query;
-  }
-  return `cribl ${query}`; // TODO: make this not dumb
 }

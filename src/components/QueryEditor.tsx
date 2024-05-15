@@ -7,18 +7,19 @@ import { debounce } from 'lodash';
 
 type Props = QueryEditorProps<CriblDataSource, CriblQuery, CriblDataSourceOptions>;
 
-const queryTypeOptions = ['saved', 'adhoc'].map((value) => ({ label: value, value }));
+const QUERY_TYPE_OPTIONS = ['saved', 'adhoc'].map((value) => ({ label: value, value }));
+const DEFAULT_QUERY_TYPE = 'adhoc';
 
 export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) {
   const debouncedOnRunQuery = useRef(debounce(onRunQuery, 750)).current;
   const [savedSearchIdOptions, setSavedSearchIdOptions] = useState<SelectableValue[]>([]);
   const [savedSearchId, setSavedSearchId] = useState('');
 
-  const [queryType, setQueryType] = useState(query.type as string);
+  const [queryType, setQueryType] = useState(query.type as string ?? DEFAULT_QUERY_TYPE);
   const [adhocQuery, setAdhocQuery] = useState(query.type === 'adhoc' ? query.query : '');
 
   const onQueryTypeChange = (sv: SelectableValue<string>) => {
-    const newQueryType = sv.value ?? 'saved';
+    const newQueryType = sv.value ?? DEFAULT_QUERY_TYPE;
     setQueryType(newQueryType);
     if (newQueryType === 'saved') {
       onChange({ ...query, type: 'saved', savedSearchId });
@@ -35,7 +36,7 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
   };
 
   const onAdhocQueryKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Enter') {
+    if (event.key === 'Enter' && adhocQuery.trim().length > 0) {
       onRunQuery();
     }
   };
@@ -43,7 +44,7 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
   const onSavedQueryIdChange = (sv: SelectableValue<string>) => {
     const newSavedSearchId = sv.value?.replace(/\s+/g, '') ?? ''; // auto-trim/remove any whitespace
     setSavedSearchId(newSavedSearchId);
-    if (newSavedSearchId.match(/^[a-zA-Z0-9_]+$/)) {
+    if (newSavedSearchId !== savedSearchId && newSavedSearchId.match(/^[a-zA-Z0-9_]+$/)) {
       onChange({ ...query, type: 'saved', savedSearchId: newSavedSearchId });
       debouncedOnRunQuery();
     }
@@ -54,7 +55,10 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
     const loadSavedSearchIds = async () => {
       try {
         const savedSearchIds = await datasource.loadSavedSearchIds();
-        setSavedSearchIdOptions(['', ...savedSearchIds].map((value) => ({ value, label: value })));
+        setSavedSearchIdOptions([
+          { label: 'Please select...', value: '' },
+          ...savedSearchIds.map((value) => ({ value, label: value })),
+        ]);
       } catch (err) {
         console.log(`Failed to load saved search IDs: ${err}`);
       }
@@ -69,7 +73,14 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
       </InlineField>;
     } else {
       return <InlineField label="Query" labelWidth={10} tooltip="Cribl Search query (Kusto)">
-        <Input onChange={onAdhocQueryChange} onKeyDown={onAdhocQueryKeyDown} value={adhocQuery} width={64} type="string" />
+        <Input
+          onChange={onAdhocQueryChange}
+          onKeyDown={onAdhocQueryKeyDown}
+          value={adhocQuery}
+          width={64}
+          type="string"
+          placeholder='Enter your query, i.e. dataset="cribl_search_sample" | limit 42'
+        />
       </InlineField>;
     }
   };
@@ -77,7 +88,7 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
   return (
     <div className="gf-form">
       <InlineField label="Query Type" labelWidth={12}>
-        <Select onChange={onQueryTypeChange} options={queryTypeOptions} value={queryType} width={12} />
+        <Select onChange={onQueryTypeChange} options={QUERY_TYPE_OPTIONS} value={queryType} width={12} />
       </InlineField>
       {getQueryUI()}
     </div>
