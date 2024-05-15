@@ -60,7 +60,7 @@ describe('datasource', () => {
         expected: 'let stage1 = foo; let stage2 = cribl bar; set baz="biff"; cribl dataset="$vt_dummy" event < 10',
       },
     ].forEach(({ query, expected }) => {
-      it(`should work prepend cribl as needed: ${query}`, () => {
+      it(`should prepend cribl as needed: ${query}`, () => {
         expect(prependCriblOperator(query)).toBe(expected);
       });
     });
