@@ -12,6 +12,7 @@ import {
 import { getBackendSrv } from '@grafana/runtime';
 import { lastValueFrom } from 'rxjs';
 import { CriblQuery, CriblDataSourceOptions } from './types';
+import { createGetBackoff } from 'backoff';
 
 const MAX_RESULTS = 10000; // same as what the actual Cribl UI imposes
 const QUERY_PAGE_SIZE = 1000;
@@ -60,6 +61,7 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
       };
 
     // Load the search results, paging through until we've hit MAX_RESULTS or read them all, whatever comes first
+    const getBackoff = createGetBackoff();
     do {
       const authorization = await this.getAuthorization(); // refresh auth token as needed
       const response = await lastValueFrom(getBackendSrv().fetch({
@@ -108,7 +110,7 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
         if (Date.now() - startTime >= MAX_DELAY_WAITING_FOR_FINISHED) {
           throw new Error(`Job ${header.job.id} still not finished after ${Date.now() - startTime}ms`);
         }
-        await new Promise((resolve) => setTimeout(resolve, 250)); // Give it a bit of time to finish
+        await new Promise((resolve) => setTimeout(resolve, getBackoff())); // Give it a bit of time to finish
         continue;
       }
 
