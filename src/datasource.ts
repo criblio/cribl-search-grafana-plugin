@@ -112,6 +112,10 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
         continue;
       }
 
+      if (header.job.status !== 'completed') {
+        throw new Error(`Job ${header.job.id} ended with status ${header.job.status}`);
+      }
+
       // The job is finished, so we can trust totalEventCount now, and we can proceed with getting the results
       totalEventCount = header.totalEventCount;
 
