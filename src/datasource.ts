@@ -7,6 +7,7 @@ import {
   DataSourceInstanceSettings,
   Field,
   FieldType,
+  TimeRange,
 } from '@grafana/data';
 import { getBackendSrv } from '@grafana/runtime';
 import { lastValueFrom } from 'rxjs';
@@ -34,15 +35,16 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
    */
   async query(options: DataQueryRequest<CriblQuery>): Promise<DataQueryResponse> {
     // options.targets contains one or more queries, each of which results in a DataFrame
-    return Promise.all(options.targets.map((q) => this.processQuery(q))).then((data) => ({ data }));
+    return Promise.all(options.targets.map((q) => this.processQuery(q, options.range))).then((data) => ({ data }));
   }
 
   /**
    * Run a single query to produce a single DataFrame
    * @param criblQuery the query to run
+   * @param range the time range from the time picker
    * @returns the DataFrame with the results
    */
-  private async processQuery(criblQuery: CriblQuery): Promise<DataFrame> {
+  private async processQuery(criblQuery: CriblQuery, range: TimeRange): Promise<DataFrame> {
     let fields: Record<string, Field> = {};
     let eventCount = 0;
     let totalEventCount: number | undefined = undefined;
@@ -51,7 +53,11 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
     // Initially we're simply trying to load the most recent results for the given saved search
     let queryParams: any = criblQuery.type === 'saved'
       ? { queryId: criblQuery.savedSearchId }
-      : { query: prependCriblOperator(criblQuery.query), earliest: '-1h', latest: 'now' }; // TODO: earliest/latest
+      : {
+        query: prependCriblOperator(criblQuery.query),
+        earliest: range.from.unix(),
+        latest: range.to.unix(),
+      };
 
     // Load the search results, paging through until we've hit MAX_RESULTS or read them all, whatever comes first
     do {
