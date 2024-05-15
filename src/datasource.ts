@@ -12,6 +12,7 @@ import {
 import { getBackendSrv } from '@grafana/runtime';
 import { lastValueFrom } from 'rxjs';
 import { CriblQuery, CriblDataSourceOptions } from './types';
+import { prependCriblOperator } from 'utils';
 
 const MAX_RESULTS = 10000; // same as what the actual Cribl UI imposes
 const QUERY_PAGE_SIZE = 1000;
@@ -350,11 +351,4 @@ function parseJwtExp(token: string): number {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
   }).join(''));
   return JSON.parse(jsonPayload).exp;
-}
-
-function prependCriblOperator(query: string): string {
-  if (query.trim().startsWith('print')) {
-    return query;
-  }
-  return `cribl ${query}`; // TODO: make this not dumb
 }
