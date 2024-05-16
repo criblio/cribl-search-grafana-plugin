@@ -1,5 +1,5 @@
 import React, { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
-import { InlineField, Input, Select } from '@grafana/ui';
+import { InlineField, Select, TextArea } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { CriblDataSource } from '../datasource';
 import { CriblDataSourceOptions, CriblQuery } from '../types';
@@ -28,7 +28,7 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
     }
   };
 
-  const onAdhocQueryChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const onAdhocQueryChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     const newQuery = event.target.value;
     setAdhocQuery(newQuery);
     onChange({ ...query, type: 'adhoc', query: newQuery });
@@ -36,8 +36,11 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
   };
 
   const onAdhocQueryKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Enter' && adhocQuery.trim().length > 0) {
-      onRunQuery();
+    if (event.key === 'Enter' && !event.shiftKey) { // allow shift-enter to add a line break
+      event.preventDefault();
+      if (adhocQuery.trim().length > 0) {
+        onRunQuery();
+      }
     }
   };
 
@@ -73,11 +76,12 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
       </InlineField>;
     } else {
       return <InlineField label="Query" labelWidth={10} tooltip="Cribl Search query (Kusto)">
-        <Input
+        <TextArea
           onChange={onAdhocQueryChange}
           onKeyDown={onAdhocQueryKeyDown}
           value={adhocQuery}
-          width={64}
+          rows={1}
+          cols={72}
           type="string"
           placeholder='Enter your query, i.e. dataset="cribl_search_sample" | limit 42'
         />

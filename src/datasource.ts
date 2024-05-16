@@ -55,7 +55,7 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
     let queryParams: any = criblQuery.type === 'saved'
       ? { queryId: criblQuery.savedSearchId }
       : {
-        query: prependCriblOperator(criblQuery.query),
+        query: prependCriblOperator(criblQuery.query.replace(/[\r\n\t]+/, ' ')),
         earliest: range.from.unix(),
         latest: range.to.unix(),
       };
