@@ -71,21 +71,25 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
 
   const getQueryUI = () => {
     if (queryType === 'saved') {
-      return <InlineField label="Saved Search" labelWidth={16} tooltip="ID of the Cribl saved search">
-        <Select onChange={onSavedQueryIdChange} options={savedSearchIdOptions} value={savedSearchId} width={24} />
-      </InlineField>;
+      return (
+        <InlineField label="Saved Search" labelWidth={16} tooltip="ID of the Cribl saved search">
+          <Select onChange={onSavedQueryIdChange} options={savedSearchIdOptions} value={savedSearchId} width={24} />
+        </InlineField>
+      );
     } else {
-      return <InlineField label="Query" labelWidth={10} tooltip="Cribl Search query (Kusto)">
-        <TextArea
-          onChange={onAdhocQueryChange}
-          onKeyDown={onAdhocQueryKeyDown}
-          value={adhocQuery}
-          rows={1}
-          cols={72}
-          type="string"
-          placeholder='Enter your query, i.e. dataset="cribl_search_sample" | limit 42'
-        />
-      </InlineField>;
+      return (
+        <InlineField label="Query" labelWidth={10} tooltip="Cribl Search query (Kusto)">
+          <TextArea
+            onChange={onAdhocQueryChange}
+            onKeyDown={onAdhocQueryKeyDown}
+            value={adhocQuery}
+            rows={1}
+            cols={72}
+            type="string"
+            placeholder='Enter your query, i.e. dataset="cribl_search_sample" | limit 42'
+          />
+        </InlineField>
+      );
     }
   };
 
