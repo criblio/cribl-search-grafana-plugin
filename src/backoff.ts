@@ -13,7 +13,7 @@ export type GetBackoffFunction = () => number;
  * @param initial The initial value to wait.
  * @returns a function that returns the next backoff delay
  */
-export function createGetBackoff(initial = 50): GetBackoffFunction {
+export function createGetBackoff(initial = 200): GetBackoffFunction {
   let iteration = 0;
   const getBackoff = (): number => {
     const result = Math.min(Math.pow(initial, iterationPower(iteration)), MAX_BACKOFF);
