@@ -4,6 +4,7 @@ import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { CriblDataSource } from '../datasource';
 import { CriblDataSourceOptions, CriblQuery, QueryType } from '../types';
 import { debounce } from 'lodash';
+import { css } from '@emotion/css';
 
 type Props = QueryEditorProps<CriblDataSource, CriblQuery, CriblDataSourceOptions>;
 
@@ -93,11 +94,22 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
   }, [adhocQuery, onAdhocQueryChange, onAdhocQueryKeyDown, onSavedQueryIdChange, queryType, savedSearchId, savedSearchIdOptions]);
 
   return (
-    <div className="gf-form">
-      <InlineField label="Query Type" labelWidth={12}>
-        <Select onChange={onQueryTypeChange} options={QUERY_TYPE_OPTIONS} value={queryType} width={12} />
-      </InlineField>
-      {QueryFields}
+    <div className={['gf-form', css`
+      flex-wrap: wrap;
+      padding-top: 8px;
+    `].join(' ')}>
+      <div className={css`
+        width: 100%;
+      `}>
+         <InlineField label="Query Type" labelWidth={16}>
+           <Select onChange={onQueryTypeChange} options={QUERY_TYPE_OPTIONS} value={queryType} width={24} />
+         </InlineField>
+      </div>
+      <div className={css`
+        width: 100%;
+      `}>
+        {QueryFields}
+      </div>
     </div>
   );
 }
