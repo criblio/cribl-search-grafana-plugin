@@ -87,7 +87,7 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
             rows={1}
             cols={72}
             type="string"
-            placeholder='Enter your query, i.e. dataset="cribl_search_sample" | limit 42'
+            placeholder='Enter your query, e.g. dataset="cribl_search_sample" | limit 42'
           />
         </InlineField>
       );
