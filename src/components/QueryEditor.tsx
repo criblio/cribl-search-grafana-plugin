@@ -22,11 +22,9 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
   const onQueryTypeChange = useCallback((sv: SelectableValue<string>) => {
     const newQueryType: QueryType = sv.value as QueryType ?? DEFAULT_QUERY_TYPE;
     setQueryType(newQueryType);
-    if (newQueryType === 'saved') {
-      onChange({ ...query, type: 'saved', savedSearchId });
-    } else {
-      onChange({ ...query, type: 'adhoc', query: adhocQuery });
-    }
+    newQueryType === 'saved'
+      ? onChange({ ...query, type: 'saved', savedSearchId })
+      : onChange({ ...query, type: 'adhoc', query: adhocQuery });
   }, [adhocQuery, onChange, query, savedSearchId]);
 
   const onAdhocQueryChange = useCallback((event: ChangeEvent<HTMLTextAreaElement>) => {
