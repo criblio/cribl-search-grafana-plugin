@@ -52,7 +52,7 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
     let totalEventCount: number | undefined = undefined;
     let startTime = Date.now();
 
-    let queryParams: any = criblQuery.type === 'saved'
+    let queryParams: Record<string, unknown> = criblQuery.type === 'saved'
       ? { queryId: criblQuery.savedSearchId }
       : {
         query: prependCriblOperator(criblQuery.query.replace(/[\r\n\t]+/, ' ')),
