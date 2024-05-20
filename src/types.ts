@@ -2,6 +2,11 @@ import { DataSourceJsonData } from '@grafana/data';
 import { DataQuery } from '@grafana/schema';
 
 /**
+ * Possible values of CriblQuery.type
+ */
+export type QueryType = 'adhoc' | 'saved';
+
+/**
  * Query used with Cribl Search.  Can either use a saved search or run an adhoc query.
  */
 export type CriblQuery = DataQuery & (

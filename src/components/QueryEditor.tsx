@@ -2,7 +2,7 @@ import React, { ChangeEvent, KeyboardEvent, useCallback, useEffect, useMemo, use
 import { InlineField, Select, TextArea } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { CriblDataSource } from '../datasource';
-import { CriblDataSourceOptions, CriblQuery } from '../types';
+import { CriblDataSourceOptions, CriblQuery, QueryType } from '../types';
 import { debounce } from 'lodash';
 
 type Props = QueryEditorProps<CriblDataSource, CriblQuery, CriblDataSourceOptions>;
@@ -16,11 +16,11 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
   const [savedSearchIdOptions, setSavedSearchIdOptions] = useState<SelectableValue[]>([]);
   const [savedSearchId, setSavedSearchId] = useState('');
 
-  const [queryType, setQueryType] = useState(query.type as string ?? DEFAULT_QUERY_TYPE);
+  const [queryType, setQueryType] = useState<QueryType>(query.type ?? DEFAULT_QUERY_TYPE);
   const [adhocQuery, setAdhocQuery] = useState(query.type === 'adhoc' ? query.query : '');
 
   const onQueryTypeChange = useCallback((sv: SelectableValue<string>) => {
-    const newQueryType = sv.value ?? DEFAULT_QUERY_TYPE;
+    const newQueryType: QueryType = sv.value as QueryType ?? DEFAULT_QUERY_TYPE;
     setQueryType(newQueryType);
     if (newQueryType === 'saved') {
       onChange({ ...query, type: 'saved', savedSearchId });
