@@ -30,12 +30,12 @@ export function createGetBackoff(initial = 200): GetBackoffFunction {
 const THRESHOLDS = [10, 15, 17] as const;
 
 function iterationPower(iteration: number): number {
-  let index = 0;
-  for (index = 0; index < THRESHOLDS.length; index++) {
-    const threshold = THRESHOLDS[index];
+  let power = 0;
+  for (power = 0; power < THRESHOLDS.length; power++) {
+    const threshold = THRESHOLDS[power];
     if (iteration < threshold) {
-      return index + 1;
+      return power + 1;
     }
   }
-  return index + 1;
+  return power + 1;
 }
