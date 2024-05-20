@@ -4,13 +4,13 @@ Welcome to the Grafana Cribl plugin README. This plugin empowers you to create G
 
 ## How It Works
 
-1. **Set up a scheduled search in Cribl:** First, save a search in Cribl and configure it to run on a scheduled basis. Make a note of this search's ID. Learn how to set up a scheduled search with this [guide](https://docs.cribl.io/search/scheduled-searches/).
-   
-2. **Install this plugin to your Grafana deployment:** Add this plugin to your Grafana deployment to enable data source creation.
+1. **Install this plugin to your Grafana deployment:** Add this plugin to your Grafana deployment to enable data source creation.
 
-3. **Create a data source in Grafana using this plugin:** Configure this data source using your Cribl client ID and client secret. Details on how to acquire these can be found in the next section.
+2. **Create a data source in Grafana using this plugin:** Configure this data source using your Cribl client ID and client secret. Details on how to acquire these can be found in the next section.
 
-4. **Query the data source with your Cribl scheduled search ID:** The data source will fetch the latest results from the scheduled search based on the search ID you input.
+3. **Click "Explore" and start running adhoc queries:** You can run any Cribl Search query right there in Grafana.
+
+4. **Use saved/scheduled searches to make your dashboards faster:** Save a search in Cribl and configure it to run on a scheduled basis. Make a note of this search's ID. Learn how to set up a scheduled search with this [guide](https://docs.cribl.io/search/scheduled-searches/). In Grafana, the data source will fetch the latest results based on the search ID you select.
 
 That's the nutshell of the plugin's workings!
 
@@ -20,11 +20,11 @@ To set up the data source in Grafana, you will need to input your Cribl client I
 
 1. Navigate to the Cribl cloud and select your organization.
 
-2. Look for the API management section.
+2. Look for the API Credentials section.
 
 3. Copy your client ID and client secret.
 
-4. Back in Grafana, while adding a data source, paste the copied Cribl organization URL and the credentials.
+4. Back in Grafana, while adding a data source, paste the copied Cribl organization URL (e.g. https://main-{your-org-id}.cribl.cloud) and the credentials.
 
 5. Click on "Save and Test" to ensure everything is working correctly.
 

@@ -21,8 +21,12 @@
         "path": "img/screenshot_config.png"
       },
       {
-        "name": "Querying",
-        "path": "img/screenshot_query.png"
+        "name": "Querying (Adhoc)",
+        "path": "img/screenshot_adhoc_query.png"
+      },
+      {
+        "name": "Querying (Saved/Scheduled)",
+        "path": "img/screenshot_saved_query.png"
       }
     ],
     "version": "%VERSION%",
