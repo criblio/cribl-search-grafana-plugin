@@ -9,9 +9,10 @@ type Props = QueryEditorProps<CriblDataSource, CriblQuery, CriblDataSourceOption
 
 const QUERY_TYPE_OPTIONS = ['saved', 'adhoc'].map((value) => ({ label: value, value }));
 const DEFAULT_QUERY_TYPE = 'adhoc';
+const DEBOUNCE_RUN_DELAY_MS = 750;
 
 export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) {
-  const debouncedOnRunQuery = useRef(debounce(onRunQuery, 750)).current;
+  const debouncedOnRunQuery = useRef(debounce(onRunQuery, DEBOUNCE_RUN_DELAY_MS)).current;
   const [savedSearchIdOptions, setSavedSearchIdOptions] = useState<SelectableValue[]>([]);
   const [savedSearchId, setSavedSearchId] = useState('');
 
