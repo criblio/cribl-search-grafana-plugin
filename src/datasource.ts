@@ -1,5 +1,4 @@
 import {
-  ArrayVector,
   DataFrame,
   DataQueryRequest,
   DataQueryResponse,
@@ -137,18 +136,18 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
             field = fields[key] = {
               name: key === CRIBL_TIME_FIELD ? 'Time' : key, // Grafana uses "Time" as the standard time field name
               type: (!!v ? this.getFieldType(key, v) : null) as FieldType, // possibly null for now, we'll try to resolve it later
-              values: new ArrayVector(),
+              values: [],
               config: {},
             };
 
             // Backfill the value as undefined for any prior rows (since this field was absent until now)
             for (let i = 0; i < eventCount; ++i) {
-              (field.values as ArrayVector).add(undefined);
+              field.values.push(undefined);
             }
           }
 
           // Add the value
-          (field.values as ArrayVector).add(key === CRIBL_TIME_FIELD ? this.timeToIsoString(v) : v);
+          field.values.push(key === CRIBL_TIME_FIELD ? this.timeToIsoString(v) : v);
 
           // If we've only seen null in this field so far, set the field type if we know it now
           if (field.type == null && !!v) {
