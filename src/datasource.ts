@@ -30,6 +30,15 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
   }
 
   /**
+   * Override to avoid running the query when the query response is hidden
+   * @param query the query that would run
+   * @returns true if the query should run, false otherwise
+   */
+  filterQuery?(query: CriblQuery): boolean {
+    return !query.hide;
+  }
+
+  /**
    * Run a query, loading the most recent results for the given savedSearchId
    * @param options the options for this query
    * @returns the DataQueryResponse containing DataFrame(s)
