@@ -15,7 +15,7 @@ const DEBOUNCE_RUN_DELAY_MS = 750;
 export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) {
   const debouncedOnRunQuery = useRef(debounce(onRunQuery, DEBOUNCE_RUN_DELAY_MS)).current;
   const [savedSearchIdOptions, setSavedSearchIdOptions] = useState<SelectableValue[]>([]);
-  const [savedSearchId, setSavedSearchId] = useState('');
+  const [savedSearchId, setSavedSearchId] = useState(query.type === 'saved' ? query.savedSearchId : '');
 
   const [queryType, setQueryType] = useState<QueryType>(query.type ?? DEFAULT_QUERY_TYPE);
   const [adhocQuery, setAdhocQuery] = useState(query.type === 'adhoc' ? query.query : '');
