@@ -35,7 +35,18 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
    * @returns true if the query should run, false otherwise
    */
   filterQuery?(query: CriblQuery): boolean {
-    return !query.hide;
+    return !query.hide && this.canRunQuery(query);
+  }
+
+  private canRunQuery(criblQuery: CriblQuery): boolean {
+    switch (criblQuery.type) {
+      case 'adhoc':
+        return (criblQuery.query?.trim() ?? '').length > 0;
+      case 'saved':
+        return criblQuery.savedSearchId != null;
+      default:
+        return false;
+    }
   }
 
   /**
