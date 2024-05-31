@@ -13,11 +13,13 @@ const DEFAULT_QUERY_TYPE = 'adhoc';
 const DEBOUNCE_RUN_DELAY_MS = 750;
 
 export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) {
+  query.type = query.type ?? DEFAULT_QUERY_TYPE;
+
   const debouncedOnRunQuery = useRef(debounce(onRunQuery, DEBOUNCE_RUN_DELAY_MS)).current;
   const [savedSearchIdOptions, setSavedSearchIdOptions] = useState<SelectableValue[]>([]);
   const [savedSearchId, setSavedSearchId] = useState(query.type === 'saved' ? query.savedSearchId : '');
 
-  const [queryType, setQueryType] = useState<QueryType>(query.type ?? DEFAULT_QUERY_TYPE);
+  const [queryType, setQueryType] = useState<QueryType>(query.type);
   const [adhocQuery, setAdhocQuery] = useState(query.type === 'adhoc' ? query.query : '');
 
   const onQueryTypeChange = useCallback((sv: SelectableValue<string>) => {
