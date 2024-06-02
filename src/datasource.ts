@@ -66,6 +66,13 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
    * @returns the DataFrame with the results
    */
   private async processQuery(criblQuery: CriblQuery, range: TimeRange): Promise<DataFrame> {
+    if (!this.canRunQuery(criblQuery)) {
+      return {
+        fields: [],
+        length: 0,
+      };
+    }
+
     let fields: Record<string, Field> = {};
     let eventCount = 0;
     let totalEventCount: number | undefined = undefined;
