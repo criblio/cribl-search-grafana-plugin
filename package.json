@@ -19,6 +19,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "semver": "^7.5.2",
+    "braces": "^3.0.3",
     "@babel/core": "^7.21.4",
     "@grafana/plugin-e2e": "1.2.0",
     "@grafana/e2e-selectors": "11.0.0",
