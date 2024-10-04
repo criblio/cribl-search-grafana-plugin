@@ -1,6 +1,6 @@
 {
   "name": "criblcloud-search-datasource-plugin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Cribl Search DataSource Plugin",
   "scripts": {
     "build": "webpack -c ./.config/webpack/webpack.config.ts --env production",
