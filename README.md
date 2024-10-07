@@ -17,6 +17,26 @@ Grafana supports a wide range of data sources, including Prometheus, MySQL, and 
 
 ## Getting started
 
+### Backend
+
+1. Update [Grafana plugin SDK for Go](https://grafana.com/developers/plugin-tools/key-concepts/backend-plugins/grafana-plugin-sdk-for-go) dependency to the latest minor version:
+
+   ```bash
+   go get -u github.com/grafana/grafana-plugin-sdk-go
+   go mod tidy
+   ```
+
+2. Build backend plugin binaries for Linux, Windows and Darwin:
+
+   ```bash
+   mage -v
+   ```
+
+3. List all available Mage targets for additional commands:
+
+   ```bash
+   mage -l
+   ```
 
 ### Frontend
 
@@ -74,7 +94,6 @@ Grafana supports a wide range of data sources, including Prometheus, MySQL, and 
    npm run lint:fix
    ```
 
-
 # Distributing your plugin
 
 When distributing a Grafana plugin either within the community or privately the plugin must be signed so the Grafana application can verify its authenticity. This can be done with the `@grafana/sign-plugin` package.
@@ -83,15 +102,15 @@ _Note: It's not necessary to sign a plugin during development. The docker develo
 
 ## Initial steps
 
-Before signing a plugin please read the Grafana [plugin publishing and signing criteria](https://grafana.com/docs/grafana/latest/developers/plugins/publishing-and-signing-criteria/) documentation carefully.
+Before signing a plugin please read the Grafana [plugin publishing and signing criteria](https://grafana.com/legal/plugins/#plugin-publishing-and-signing-criteria) documentation carefully.
 
 `@grafana/create-plugin` has added the necessary commands and workflows to make signing and distributing a plugin via the grafana plugins catalog as straightforward as possible.
 
-Before signing a plugin for the first time please consult the Grafana [plugin signature levels](https://grafana.com/docs/grafana/latest/developers/plugins/sign-a-plugin/#plugin-signature-levels) documentation to understand the differences between the types of signature level.
+Before signing a plugin for the first time please consult the Grafana [plugin signature levels](https://grafana.com/legal/plugins/#what-are-the-different-classifications-of-plugins) documentation to understand the differences between the types of signature level.
 
 1. Create a [Grafana Cloud account](https://grafana.com/signup).
 2. Make sure that the first part of the plugin ID matches the slug of your Grafana Cloud account.
-   - _You can find the plugin ID in the plugin.json file inside your plugin directory. For example, if your account slug is `acmecorp`, you need to prefix the plugin ID with `acmecorp-`._
+   - _You can find the plugin ID in the `plugin.json` file inside your plugin directory. For example, if your account slug is `acmecorp`, you need to prefix the plugin ID with `acmecorp-`._
 3. Create a Grafana Cloud API key with the `PluginPublisher` role.
 4. Keep a record of this API key as it will be required for signing a plugin
 
@@ -114,11 +133,10 @@ To trigger the workflow we need to push a version tag to github. This can be ach
 1. Run `npm version <major|minor|patch>`
 2. Run `git push origin main --follow-tags`
 
-
 ## Learn more
 
 Below you can find source code for existing app plugins and other related documentation.
 
 - [Basic data source plugin example](https://github.com/grafana/grafana-plugin-examples/tree/master/examples/datasource-basic#readme)
-- [Plugin.json documentation](https://grafana.com/docs/grafana/latest/developers/plugins/metadata/)
-- [How to sign a plugin?](https://grafana.com/docs/grafana/latest/developers/plugins/sign-a-plugin/)
+- [`plugin.json` documentation](https://grafana.com/developers/plugin-tools/reference/plugin-json)
+- [How to sign a plugin?](https://grafana.com/developers/plugin-tools/publish-a-plugin/sign-a-plugin)
