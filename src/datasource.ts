@@ -8,7 +8,7 @@ import {
   FieldType,
   TimeRange,
 } from '@grafana/data';
-import { getBackendSrv } from '@grafana/runtime';
+import { getBackendSrv, getTemplateSrv } from '@grafana/runtime';
 import { lastValueFrom } from 'rxjs';
 import { CriblQuery, CriblDataSourceOptions } from './types';
 import { createGetBackoff } from 'backoff';
@@ -81,7 +81,7 @@ export class CriblDataSource extends DataSourceApi<CriblQuery, CriblDataSourceOp
     let queryParams: Record<string, unknown> = criblQuery.type === 'saved'
       ? { queryId: criblQuery.savedSearchId }
       : {
-        query: prependCriblOperator(criblQuery.query.replace(/[\r\n\t]+/, ' ')),
+        query: prependCriblOperator(getTemplateSrv().replace(criblQuery.query.replace(/[\r\n\t]+/, ' '))),
         earliest: range.from.unix(),
         latest: range.to.unix(),
       };
