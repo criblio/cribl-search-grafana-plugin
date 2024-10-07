@@ -26,6 +26,14 @@ export type CriblQuery = DataQuery & (
 );
 
 /**
+ * Default query with which we pre-populate the UI
+ */
+export const DEFAULT_QUERY: Partial<CriblQuery> = {
+  type: 'adhoc',
+  query: '', // tempting to have a real query here, but for now it's a blank canvas
+};
+
+/**
  * Options configured for each CriblDataSource instance
  */
 export interface CriblDataSourceOptions extends DataSourceJsonData {
