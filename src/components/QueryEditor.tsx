@@ -1,10 +1,9 @@
 import React, { ChangeEvent, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { InlineField, Select, TextArea } from '@grafana/ui';
+import { InlineField, Select, Stack, TextArea } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
-import { CriblDataSource } from '../datasource';
-import { CriblDataSourceOptions, CriblQuery, QueryType } from '../types';
+import { CriblDataSourceOptions, CriblQuery, QueryType } from 'types';
+import { CriblDataSource } from 'datasource';
 import { debounce } from 'lodash';
-import { css } from '@emotion/css';
 
 type Props = QueryEditorProps<CriblDataSource, CriblQuery, CriblDataSourceOptions>;
 
@@ -37,7 +36,7 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
     // Don't run it automatically, the user can hit Enter or click "Run query" when ready
   }, [onChange, query]);
 
-  const onAdhocQueryKeyDown = useCallback((event: KeyboardEvent) => {
+  const onAdhocQueryKeyDown = useCallback((event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Enter' && !event.shiftKey) { // allow shift-enter to add a line break
       event.preventDefault();
       if (adhocQuery.trim().length > 0) {
@@ -62,7 +61,7 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
         const savedSearchIds = await datasource.loadSavedSearchIds();
         setSavedSearchIdOptions([
           { label: 'Please select...', value: '' },
-          ...savedSearchIds.map((value) => ({ value, label: value })),
+          ...savedSearchIds.map((value: string) => ({ value, label: value })),
         ]);
       } catch (err) {
         console.log(`Failed to load saved search IDs: ${err}`);
@@ -96,22 +95,11 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
   }, [adhocQuery, onAdhocQueryChange, onAdhocQueryKeyDown, onSavedQueryIdChange, queryType, savedSearchId, savedSearchIdOptions]);
 
   return (
-    <div className={['gf-form', css`
-      flex-wrap: wrap;
-      padding-top: 8px;
-    `].join(' ')}>
-      <div className={css`
-        width: 100%;
-      `}>
-         <InlineField label="Query Type" labelWidth={16}>
-           <Select onChange={onQueryTypeChange} options={QUERY_TYPE_OPTIONS} value={queryType} width={24} />
-         </InlineField>
-      </div>
-      <div className={css`
-        width: 100%;
-      `}>
-        {QueryFields}
-      </div>
-    </div>
+    <Stack gap={0}>
+      <InlineField label="Query Type" labelWidth={16}>
+        <Select onChange={onQueryTypeChange} options={QUERY_TYPE_OPTIONS} value={queryType} width={24} />
+      </InlineField>
+      {QueryFields}
+    </Stack>
   );
 }

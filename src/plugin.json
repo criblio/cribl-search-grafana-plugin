@@ -1,9 +1,12 @@
 {
-  "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
   "type": "datasource",
   "name": "Cribl Search",
   "id": "criblcloud-search-datasource",
   "metrics": true,
+  "backend": true,
+  "alerting": true,
+  "executable": "gpx_search_datasource",
   "info": {
     "description": "Cribl Search",
     "author": {
@@ -33,63 +36,7 @@
     "updated": "%TODAY%"
   },
   "dependencies": {
-    "grafanaDependency": ">=10.3.3",
+    "grafanaDependency": ">=10.4.0",
     "plugins": []
-  },
-  "routes": [
-    {
-      "path": "productionAuth",
-      "url": "https://login.cribl.cloud/oauth/token",
-      "headers": [
-        {
-          "name": "Content-Type",
-          "content": "application/json"
-        }
-      ],
-      "body": {
-        "grant_type": "client_credentials",
-        "client_id": "{{ .JsonData.clientId }}",
-        "client_secret": "{{ .SecureJsonData.clientSecret }}",
-        "audience": "https://api.cribl.cloud"
-      }
-    },
-    {
-      "path": "stagingAuth",
-      "url": "https://login.cribl-staging.cloud/oauth/token",
-      "headers": [
-        {
-          "name": "Content-Type",
-          "content": "application/json"
-        }
-      ],
-      "body": {
-        "grant_type": "client_credentials",
-        "client_id": "{{ .JsonData.clientId }}",
-        "client_secret": "{{ .SecureJsonData.clientSecret }}",
-        "audience": "https://api.cribl-staging.cloud"
-      }
-    },
-    {
-      "path": "localAuth",
-      "url": "{{ .JsonData.criblOrgBaseUrl }}/api/v1/auth/login",
-      "headers": [
-        {
-          "name": "Content-Type",
-          "content": "application/json"
-        }
-      ],
-      "body": {
-        "username": "admin",
-        "password": "admin"
-      }
-    },
-    {
-      "path": "savedSearches",
-      "url": "{{ .JsonData.criblOrgBaseUrl }}/api/v1/m/default_search/search/saved"
-    },
-    {
-      "path": "query",
-      "url": "{{ .JsonData.criblOrgBaseUrl }}/api/v1/m/default_search/search/query"
-    }
-  ]
+  }
 }
