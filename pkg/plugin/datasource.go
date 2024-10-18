@@ -208,6 +208,9 @@ func (d *Datasource) query(_ context.Context, _ backend.PluginContext, dataQuery
 					}
 				}
 
+				// Grafana doesn't like nested objects.  Convert it to a string as needed
+				value = flattenNestedObjectToString(value)
+
 				// Establish the field if it we haven't seen it yet
 				field, fieldIdx := frame.FieldByName(fieldName)
 				if fieldIdx == -1 {

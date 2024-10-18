@@ -95,6 +95,18 @@ func makeEmptyConcreteTypeArray(val interface{}) (interface{}, error) {
 	}
 }
 
+// Grafana doesn't like nested values.  If a field value is an object, flatten it
+// to a string by serializing it to JSON.
+func flattenNestedObjectToString(val interface{}) interface{} {
+	switch val.(type) {
+	case map[string]interface{}:
+		if b, err := json.Marshal(val); err == nil {
+			return string(b)
+		}
+	}
+	return val
+}
+
 // Parse a serialized JavaScript error.  Expects at least `name` and `message` fields, and possibly
 // extra fields.  Returns an error if it was successfully parsed, otherwise nil.
 func parseJavaScriptError(body []byte) error {
