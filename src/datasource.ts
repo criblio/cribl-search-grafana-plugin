@@ -26,9 +26,7 @@ export class CriblDataSource extends DataSourceWithBackend<CriblQuery, CriblData
   }
 
   async loadSavedSearchIds() {
-    const result = await this.getResource('savedSearchIds');
-    console.log(`loadSavedSearchIds result=${JSON.stringify(result)}`);
-    return result;
+    return await this.getResource('savedSearchIds');
   }
 
   private canRunQuery(criblQuery: CriblQuery): boolean {
