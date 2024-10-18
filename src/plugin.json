@@ -5,6 +5,7 @@
   "id": "criblcloud-search-datasource",
   "metrics": true,
   "backend": true,
+  "alerting": true,
   "executable": "gpx_search_datasource",
   "info": {
     "description": "Cribl Search",
