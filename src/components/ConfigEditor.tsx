@@ -1,7 +1,7 @@
 import React, { ChangeEvent } from 'react';
 import { InlineField, Input, SecretInput } from '@grafana/ui';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
-import { CriblDataSourceOptions, CriblSecureJsonData } from '../types';
+import { CriblDataSourceOptions, CriblSecureJsonData } from 'types';
 
 interface Props extends DataSourcePluginOptionsEditorProps<CriblDataSourceOptions, CriblSecureJsonData> {}
 
@@ -72,7 +72,7 @@ export function ConfigEditor(props: Props) {
   const secureJsonData = (options.secureJsonData || {}) as CriblSecureJsonData;
 
   return (
-    <div className="gf-form-group">
+    <>
       <InlineField label="Cribl Organization URL" labelWidth={24}>
         <Input
           value={jsonData.criblOrgBaseUrl}
@@ -101,7 +101,7 @@ export function ConfigEditor(props: Props) {
           onChange={onChangeClientSecret}
         />
       </InlineField>
-    </div>
+    </>
   );
 }
 

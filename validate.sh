@@ -6,6 +6,7 @@ echo "Validating the ${PLUGIN_ID} plugin"
 echo "[Re]building the plugin"
 rm -rf dist
 npm run build
+mage -v
 
 cleanup () {
   rm -rf ${PLUGIN_ID} ${PLUGIN_ID}.zip
