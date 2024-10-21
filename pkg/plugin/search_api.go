@@ -70,8 +70,7 @@ func (api *SearchAPI) LoadSavedSearchIds() ([]string, error) {
 	var data struct {
 		Items []map[string]any `json:"items"`
 	}
-	err = json.Unmarshal(responseBytes, &data)
-	if err != nil {
+	if err = json.Unmarshal(responseBytes, &data); err != nil {
 		return nil, fmt.Errorf("failed to load saved search ids: error while parsing JSON: %v", err.Error())
 	}
 
