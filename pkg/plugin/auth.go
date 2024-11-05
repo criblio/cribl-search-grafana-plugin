@@ -43,6 +43,7 @@ func RefreshTokenViaOAuth(criblOrgBaseUrl string, clientId string, clientSecret 
 	if err != nil {
 		return &BearerToken{}, fmt.Errorf("auth http error: %v", err.Error())
 	}
+	defer res.Body.Close()
 	responseBody, err := io.ReadAll(res.Body)
 	if err != nil {
 		return &BearerToken{}, fmt.Errorf("auth error, reading body: %v", err.Error())
@@ -76,6 +77,7 @@ func RefreshTokenViaLocalAPI(apiBaseUrl string, username string, password string
 	if err != nil {
 		return &BearerToken{}, fmt.Errorf("login http error: %v", err.Error())
 	}
+	defer res.Body.Close()
 	responseBody, err := io.ReadAll(res.Body)
 	if err != nil {
 		return &BearerToken{}, fmt.Errorf("login error, reading body: %v", err.Error())
