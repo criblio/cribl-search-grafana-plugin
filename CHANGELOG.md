@@ -8,3 +8,8 @@ Initial release.  Provides basic data source functionality of fetching saved/sch
 
 - Add support for using dashboard variables in Cribl Search queries.
 - Add support for Grafana alerting.
+
+## 1.1.1
+
+- Remove unnecessary logic from CheckHealth
+- Properly close HTTP response body in all cases

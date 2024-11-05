@@ -278,16 +278,6 @@ func (d *Datasource) query(_ context.Context, _ backend.PluginContext, dataQuery
 func (d *Datasource) CheckHealth(_ context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
 	res := &backend.CheckHealthResult{}
 
-	ps, err := models.LoadPluginSettings(*req.PluginContext.DataSourceInstanceSettings)
-	if err != nil {
-		return nil, err
-	}
-	// If any of the settings have changed, update the settings and force a fresh auth
-	if d.Settings.CriblOrgBaseUrl != ps.CriblOrgBaseUrl || d.Settings.ClientId != ps.ClientId || d.Settings.Secrets.ClientSecret != ps.Secrets.ClientSecret {
-		d.Settings = ps
-		d.SearchAPI = NewSearchAPI(ps)
-	}
-
 	if !isValidURL(d.Settings.CriblOrgBaseUrl) {
 		res.Status = backend.HealthStatusError
 		res.Message = "A valid Cribl Organization URL must be supplied"
@@ -296,7 +286,7 @@ func (d *Datasource) CheckHealth(_ context.Context, req *backend.CheckHealthRequ
 
 	// We test the data source by loading saved search IDs.  This ensures the creds
 	// are valid and we'll be able to make API calls successfully.
-	_, err = d.SearchAPI.LoadSavedSearchIds()
+	_, err := d.SearchAPI.LoadSavedSearchIds()
 	if err != nil {
 		res.Status = backend.HealthStatusError
 		res.Message = err.Error()
