@@ -180,7 +180,7 @@ func (d *Datasource) query(_ context.Context, _ backend.PluginContext, dataQuery
 			// If there's a configured timeout, ensure we don't let the query run longer than that
 			if maxQueryDuration > 0 && elapsed >= maxQueryDuration {
 				// TODO: cancel the query
-				return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("Job %s still not finished after %v (status=%v)", jobId, maxQueryDuration, status))
+				return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("Job %s still not finished after %v (status=%v). Consider using a scheduled search to speed this up. https://docs.cribl.io/search/scheduled-searches/", jobId, maxQueryDuration, status))
 			}
 			a, b = b, a+b // Fibonacci backoff
 			backoffDuration := a
