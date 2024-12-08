@@ -45,6 +45,10 @@ export interface CriblDataSourceOptions extends DataSourceJsonData {
    * Client ID used to generate OAuth tokens
    */
   clientId?: string;
+  /**
+   * How long we're willing to wait for a query to run before giving up on it.
+   */
+  queryTimeoutSec?: number;
 }
 
 /**
