@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -59,6 +60,12 @@ func (api *SearchAPI) RunQueryAndGetResults(queryParams *url.Values) (*SearchQue
 	return &result, nil
 }
 
+// Cancel a search query.
+func (api *SearchAPI) CancelQuery(jobId string) error {
+	_, err := api.doPOST(fmt.Sprintf("/api/v1/m/default_search/search/jobs/%s/cancel", jobId), nil, "application/json", []byte("{}"))
+	return err
+}
+
 // Load the list of saved search IDs available to the user corresponding to the API creds.
 // This can be used to populate a dropdown to make it easy for the user to pick one.
 // Returns a list of saved search IDs.
@@ -99,6 +106,32 @@ func (api *SearchAPI) doGET(uri string, queryParams *url.Values) ([]byte, error)
 	if err != nil {
 		return nil, fmt.Errorf("GET request failed: %v", err.Error())
 	}
+	return api.readResponse(res)
+}
+
+// Perform a GET request to the API, returning the raw response body as a byte array
+func (api *SearchAPI) doPOST(uri string, queryParams *url.Values, contentType string, data []byte) ([]byte, error) {
+	req, err := http.NewRequest("POST", api.url(uri), bytes.NewBuffer(data))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create POST request: %v", err.Error())
+	}
+	err = api.addAuthorization(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add Authorization: %v", err.Error())
+	}
+	if queryParams != nil {
+		req.URL.RawQuery = queryParams.Encode()
+	}
+	req.Header.Set("Content-Type", contentType)
+	backend.Logger.Debug("http POST", "URL", req.URL.String(), "contentType", contentType)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("POST request failed: %v", err.Error())
+	}
+	return api.readResponse(res)
+}
+
+func (api *SearchAPI) readResponse(res *http.Response) ([]byte, error) {
 	defer res.Body.Close()
 	responseBody, err := io.ReadAll(res.Body)
 	if err != nil {

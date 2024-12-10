@@ -179,7 +179,11 @@ func (d *Datasource) query(_ context.Context, _ backend.PluginContext, dataQuery
 			elapsed := time.Since(startTime)
 			// If there's a configured timeout, ensure we don't let the query run longer than that
 			if maxQueryDuration > 0 && elapsed >= maxQueryDuration {
-				// TODO: cancel the query
+				backend.Logger.Debug("query timed out, canceling", "jobId", jobId)
+				err := d.SearchAPI.CancelQuery(jobId)
+				if err != nil {
+					backend.Logger.Warn("failed to cancel query", "jobId", jobId, "err", err)
+				}
 				return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("Job %s still not finished after %v (status=%v). Consider using a scheduled search to speed this up. https://docs.cribl.io/search/scheduled-searches/", jobId, maxQueryDuration, status))
 			}
 			a, b = b, a+b // Fibonacci backoff
