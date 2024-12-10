@@ -48,7 +48,9 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
   const onSavedQueryIdChange = useCallback((sv: SelectableValue<string>) => {
     const newSavedSearchId = sv.value?.replace(/\s+/g, '') ?? ''; // auto-trim/remove any whitespace
     setSavedSearchId(newSavedSearchId);
-    if (newSavedSearchId !== savedSearchId && newSavedSearchId.match(/^[a-zA-Z0-9_]+$/)) {
+    // May contain ${...} style variables from the dashboard, but otherwise may contain only valid ID characters.
+    // May contain any combination of valid ID chars and dashboard variable(s).
+    if (newSavedSearchId !== savedSearchId && newSavedSearchId.match(/^([a-zA-Z0-9_]+|\$\{.+?\})+$/)) {
       onChange({ ...query, type: 'saved', savedSearchId: newSavedSearchId });
       debouncedOnRunQuery();
     }
@@ -74,7 +76,12 @@ export function QueryEditor({ datasource, query, onChange, onRunQuery }: Props) 
     if (queryType === 'saved') {
       return (
         <InlineField label="Saved Search" labelWidth={16} tooltip="ID of the Cribl saved search">
-          <Select onChange={onSavedQueryIdChange} options={savedSearchIdOptions} value={savedSearchId} width={24} />
+          <Select
+            allowCustomValue
+            onChange={onSavedQueryIdChange}
+            options={savedSearchIdOptions}
+            value={savedSearchIdOptions.find((o) => o.value === savedSearchId) || { label: savedSearchId, value: savedSearchId }}
+            width={24} />
         </InlineField>
       );
     } else {
