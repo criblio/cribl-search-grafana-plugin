@@ -1,4 +1,4 @@
-import React, { ChangeEvent } from 'react';
+import React, { ChangeEvent, useState } from 'react';
 import { InlineField, Input, SecretInput } from '@grafana/ui';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
 import { CriblDataSourceOptions, CriblSecureJsonData } from 'types';
@@ -68,6 +68,30 @@ export function ConfigEditor(props: Props) {
     });
   };
 
+  const [queryTimeoutValidationError, setQueryTimeoutValidationError] = useState<string | null>(null);
+  const onChangeQueryTimeoutSec = (event: ChangeEvent<HTMLInputElement>) => {
+    const validateQueryTimeout = (value: string | undefined): boolean => {
+      if (value != null && value.length > 0) {
+        const queryTimeoutSec = +value;
+        if (Number.isNaN(queryTimeoutSec) || queryTimeoutSec <= 0) {
+          setQueryTimeoutValidationError(`Invalid query timeout (${value}), must be a positive integer`);
+          return false;
+        }
+      }
+      setQueryTimeoutValidationError(null);
+      return true;
+    };
+    if (validateQueryTimeout(event.target.value)) {
+      onOptionsChange({
+        ...options,
+        jsonData: {
+          ...options.jsonData,
+          queryTimeoutSec: event.target.value?.length > 0 ? +event.target.value : undefined,
+        },
+      });
+    }
+  };
+
   const { jsonData, secureJsonFields } = options;
   const secureJsonData = (options.secureJsonData || {}) as CriblSecureJsonData;
 
@@ -99,6 +123,17 @@ export function ConfigEditor(props: Props) {
           width={54}
           onReset={onResetClientSecret}
           onChange={onChangeClientSecret}
+        />
+      </InlineField>
+      <InlineField label="Query Timeout" labelWidth={24}
+        invalid={!!queryTimeoutValidationError}
+        error={queryTimeoutValidationError}
+        tooltip="How long (seconds) you're willing to wait for a query before we give up and cancel it.  Leave blank to mean no limit.">
+        <Input
+          value={jsonData.queryTimeoutSec ?? ''}
+          placeholder="number of seconds (or blank for no timeout)"
+          width={54}
+          onChange={onChangeQueryTimeoutSec}
         />
       </InlineField>
     </>
