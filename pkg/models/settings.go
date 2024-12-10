@@ -10,6 +10,7 @@ import (
 type PluginSettings struct {
 	CriblOrgBaseUrl string                `json:"criblOrgBaseUrl"`
 	ClientId        string                `json:"clientId"`
+	QueryTimeoutSec *float64              `json:"queryTimeoutSec"`
 	Secrets         *SecretPluginSettings `json:"-"`
 }
 

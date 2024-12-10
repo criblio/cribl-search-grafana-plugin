@@ -28,7 +28,6 @@ var (
 const MAX_RESULTS = 10000 // same as what the actual Cribl UI imposes
 const QUERY_PAGE_SIZE = 1000
 const CRIBL_TIME_FIELD = "_time"
-const MAX_DELAY_WAITING_FOR_FINISHED = 60 * time.Second // could make this configurable in a future release
 const MAX_BACKOFF_DURATION = 2 * time.Second
 const GRAFANA_TIME_FIELD_NAME = "Time"
 
@@ -133,6 +132,11 @@ func (d *Datasource) query(_ context.Context, _ backend.PluginContext, dataQuery
 
 	eventCount := 0
 	totalEventCount := -1
+	maxQueryDuration := time.Duration(0)
+	if d.Settings.QueryTimeoutSec != nil {
+		maxQueryDuration = time.Duration(*d.Settings.QueryTimeoutSec * 1e9)
+	}
+	backend.Logger.Info("timeout will be", "maxQueryDuration", maxQueryDuration, "queryTimeoutSec", d.Settings.QueryTimeoutSec)
 	startTime := time.Now()
 
 	// Load the search results, paging through until we've hit MAX_RESULTS or read all events, whatever comes first
@@ -173,8 +177,14 @@ func (d *Datasource) query(_ context.Context, _ backend.PluginContext, dataQuery
 		// new job, and we get isFinished=false.  When this is the case, grab the job ID and poll until the job is finished.
 		if !result.Header["isFinished"].(bool) {
 			elapsed := time.Since(startTime)
-			if elapsed >= MAX_DELAY_WAITING_FOR_FINISHED {
-				return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("Job %s still not finished after %v (status=%v)", jobId, elapsed, status))
+			// If there's a configured timeout, ensure we don't let the query run longer than that
+			if maxQueryDuration > 0 && elapsed >= maxQueryDuration {
+				backend.Logger.Debug("query timed out, canceling", "jobId", jobId)
+				err := d.SearchAPI.CancelQuery(jobId)
+				if err != nil {
+					backend.Logger.Warn("failed to cancel query", "jobId", jobId, "err", err)
+				}
+				return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("Job %s still not finished after %v (status=%v). Consider using a scheduled search to speed this up. https://docs.cribl.io/search/scheduled-searches/", jobId, maxQueryDuration, status))
 			}
 			a, b = b, a+b // Fibonacci backoff
 			backoffDuration := a
