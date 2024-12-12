@@ -12,13 +12,22 @@ export class CriblDataSource extends DataSourceWithBackend<CriblQuery, CriblData
   }
 
   applyTemplateVariables(criblQuery: CriblQuery, scopedVars: ScopedVars) {
-    if (criblQuery.type !== 'adhoc') {
-      return criblQuery;
+    switch (criblQuery.type) {
+      case 'adhoc':
+        return {
+          ...criblQuery,
+          // You can use dashboard variables in your query
+          query: getTemplateSrv().replace(criblQuery.query, scopedVars),
+        };
+      case 'saved':
+        return {
+          ...criblQuery,
+          // The savedSearchId can also be composed using dashboard variable(s)
+          savedSearchId: getTemplateSrv().replace(criblQuery.savedSearchId, scopedVars),
+        };
+      default: // exhaustive check
+        throw new Error(`Unexpected query type`);
     }
-    return {
-      ...criblQuery,
-      query: getTemplateSrv().replace(criblQuery.query, scopedVars),
-    };
   }
 
   filterQuery(query: CriblQuery): boolean {
