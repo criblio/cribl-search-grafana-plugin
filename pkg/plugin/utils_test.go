@@ -63,42 +63,46 @@ func TestCollapseToSingleLine(t *testing.T) {
 	assert.Equal(t, `hello there aw yeah`, collapseToSingleLine("hello\nthere\taw\r\nyeah"))
 }
 
-func TestTimeToIsoString(t *testing.T) {
+func TestCriblTimeToGrafanaTime(t *testing.T) {
 	for _, test := range []struct {
 		In       interface{}
-		Expected string
+		Expected int64
 	}{
 		{
 			In:       nil,
-			Expected: "",
+			Expected: 0,
 		},
 		{
 			In:       false,
-			Expected: "",
+			Expected: 0,
 		},
 		{
 			In:       true,
-			Expected: "",
+			Expected: 0,
 		},
 		{
 			In:       "whatever",
-			Expected: "",
+			Expected: 0,
 		},
 		{
 			In:       float64(1728744793),
-			Expected: "2024-10-12T14:53:13Z",
+			Expected: 1728744793000000,
 		},
 		{
 			In:       float64(1728744793.123),
-			Expected: "2024-10-12T14:53:13.123Z",
+			Expected: 1728744793123000,
+		},
+		{
+			In:       float64(1728744793.123456),
+			Expected: 1728744793123456,
 		},
 	} {
-		ok, out := timeToIsoString(test.In)
-		if len(test.Expected) == 0 {
+		ok, out := criblTimeToGrafanaTime(test.In)
+		if test.Expected == 0 {
 			assert.Equal(t, false, ok, fmt.Sprintf("input %v produced ok=%v, out=%v", test.In, ok, out))
 		} else {
 			assert.Equal(t, true, ok, fmt.Sprintf("input %v produced ok=%v, out=%v", test.In, ok, out))
-			assert.Equal(t, test.Expected, out, test.In)
+			assert.Equal(t, test.Expected, out.UnixMicro(), test.In)
 		}
 	}
 }

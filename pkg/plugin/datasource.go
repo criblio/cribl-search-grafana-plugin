@@ -208,13 +208,13 @@ func (d *Datasource) query(_ context.Context, _ backend.PluginContext, dataQuery
 			// Grab the keys and values from the event and populate fields in the frame
 			for fieldName, value := range event {
 				if fieldName == CRIBL_TIME_FIELD {
-					// _time is in seconds, and Grafana needs it in ISO format.  If the conversion is successful
-					// (which it will be most of the time), we use Grafana's well-known "time" field name instead.
-					// If the conversion fails, _time is something other than seconds, and it will pass-through
-					// as is with the "_time" field name.
-					if ok, isoString := timeToIsoString(value); ok {
+					// Two things are happening here:
+					// 1. Instead of our "_time" we use Grafana's well-known "time" field name.
+					// 2. Convert from seconds to time.Time struct.  If the conversion fails, _time must be something
+					// other than seconds, and it will pass-through as is with the original "_time" field name.
+					if ok, time := criblTimeToGrafanaTime(value); ok {
 						fieldName = GRAFANA_TIME_FIELD_NAME
-						value = isoString
+						value = time
 					}
 				}
 
