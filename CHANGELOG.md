@@ -20,3 +20,7 @@ Initial release.  Provides basic data source functionality of fetching saved/sch
 - Add info & doc link to the timeout error message to encourage the user to leverage scheduled search.
 - Upon timeout, cancel the query on the Cribl Search side.
 - Allow saved search ID to be composed using dashboard `${variables}`.
+
+## 1.1.3
+
+- Fix "time" field data type.
