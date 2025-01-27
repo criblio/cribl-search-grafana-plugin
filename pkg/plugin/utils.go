@@ -57,8 +57,8 @@ func collapseToSingleLine(query string) string {
 	return regexp.MustCompile("[\r\n\t]+").ReplaceAllString(query, " ")
 }
 
-// Convert the value of the "_time" field to an ISO timestamp string
-func timeToIsoString(timeValue interface{}) (bool, string) {
+// Convert the value of the "_time" field (expected to be in seconds) to a time.Time in UTC
+func criblTimeToGrafanaTime(timeValue interface{}) (bool, time.Time) {
 	var seconds float64
 	switch v := timeValue.(type) {
 	case float64:
@@ -66,15 +66,15 @@ func timeToIsoString(timeValue interface{}) (bool, string) {
 	case string:
 		s, err := strconv.ParseFloat(v, 64)
 		if err != nil {
-			return false, ""
+			return false, time.Time{}
 		}
 		seconds = s
 	default:
-		return false, ""
+		return false, time.Time{}
 	}
 	wholeSec := int64(seconds)
-	nanoSec := int64(math.Round((seconds-float64(wholeSec))*1000.0)) * 1000000 // ms precision
-	return true, time.Unix(wholeSec, nanoSec).UTC().Format(time.RFC3339Nano)
+	nanoSec := int64(math.Round((seconds-float64(wholeSec))*1000000.0)) * 1000 // microsec precision
+	return true, time.Unix(wholeSec, nanoSec).UTC()
 }
 
 // Grafana's data.NewField() is super finicky.  You're force to supply an array of values,
@@ -90,6 +90,8 @@ func makeEmptyConcreteTypeArray(val interface{}) (interface{}, error) {
 		return []float64{}, nil
 	case bool:
 		return []bool{}, nil
+	case time.Time:
+		return []time.Time{}, nil
 	default:
 		return nil, fmt.Errorf("unsupported type: %T (%v)", t, t)
 	}
