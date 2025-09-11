@@ -147,7 +147,7 @@ export function ConfigEditor(props: Props) {
  */
 function parseCriblOrgBaseUrl(url: string): string {
   // This regex allows the user to paste any cloud URL for their org.  We pluck the tenant and domain and strip the rest.
-  let match = url.match(/^https:\/\/([^./]+)\.(cribl(?:-staging)?\.cloud)(?:\/.+)$/);
+  let match = url.match(/^https:\/\/([^./]+)\.(cribl(?:-gov)?(?:-staging)?\.cloud)(?:\/.+)$/);
   if (!match) {
     return url; // it's some other URL format (i.e. local dev), just use it as-is
   }
