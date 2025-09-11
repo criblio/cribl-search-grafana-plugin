@@ -20,26 +20,42 @@ type BearerToken struct {
 }
 
 // Refresh an auth token via OAuth.  This is the normal way the plugin authenticates, using
-// either cribl.cloud or cribl-staging.cloud depending on the value of criblOrgBaseUrl.
+// cribl.cloud, cribl-staging.cloud, cribl-gov.cloud, or cribl-gov-staging.cloud depending on the value of criblOrgBaseUrl.
 // Upon success, returns an AuthToken which conveys the bearer token and an expiration time.
 func RefreshTokenViaOAuth(criblOrgBaseUrl string, clientId string, clientSecret string) (*BearerToken, error) {
-	var url, audience string
+	var url, audience, requestEncoding string
+	var wasGov bool = false
+	var requestBody []byte
 	if strings.HasSuffix(criblOrgBaseUrl, "cribl-staging.cloud") {
 		url = "https://login.cribl-staging.cloud/oauth/token"
 		audience = "https://api.cribl-staging.cloud"
+	} else if strings.HasSuffix(criblOrgBaseUrl, "cribl-gov-staging.cloud") {
+		wasGov = true
+		url = "https://criblgov-stg.okta.com/oauth2/default/v1/token"
+		audience = "https://api.cribl-gov-staging.cloud"
+	} else if strings.HasSuffix(criblOrgBaseUrl, "cribl-gov.cloud") {
+		wasGov = true
+		url = "https://criblgov-prod.okta.com/oauth2/default/v1/token"
+		audience = "https://api.cribl-gov.cloud"
 	} else {
 		url = "https://login.cribl.cloud/oauth/token"
 		audience = "https://api.cribl.cloud"
 	}
 	backend.Logger.Debug("Refreshing token via OAuth", "url", url, "audience", audience)
 
-	requestBody, _ := json.Marshal(map[string]string{
-		"grant_type":    "client_credentials",
-		"client_id":     clientId,
-		"client_secret": clientSecret,
-		"audience":      audience,
-	})
-	res, err := http.Post(url, "application/json", bytes.NewBuffer(requestBody))
+	if wasGov == false {
+		requestBody, _ = json.Marshal(map[string]string{
+			"grant_type":    "client_credentials",
+			"client_id":     clientId,
+			"client_secret": clientSecret,
+				"audience":      audience,
+		})
+		requestEncoding = "application/json"
+	} else {
+		requestBody = []byte(fmt.Sprintf("grant_type=client_credentials&client_id=%s&client_secret=%s&audience=%s", clientId, clientSecret, audience))
+		requestEncoding = "application/x-www-form-urlencoded"
+	}
+	res, err := http.Post(url, requestEncoding, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return &BearerToken{}, fmt.Errorf("auth http error: %v", err.Error())
 	}
