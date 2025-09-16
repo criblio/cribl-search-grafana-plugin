@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strconv"
 	"time"
+	"errors"
 
 	"github.com/criblcloud/search-datasource/pkg/models"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -94,7 +95,7 @@ func (d *Datasource) QueryData(ctx context.Context, req *backend.QueryDataReques
 	return response, nil
 }
 
-func (d *Datasource) query(_ context.Context, _ backend.PluginContext, dataQuery backend.DataQuery) backend.DataResponse {
+func (d *Datasource) query(ctx context.Context, _ backend.PluginContext, dataQuery backend.DataQuery) backend.DataResponse {
 	var criblQuery models.CriblQuery
 	if err := json.Unmarshal(dataQuery.JSON, &criblQuery); err != nil {
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("failed to unmarshal CriblQuery: %v", err.Error()))
@@ -192,7 +193,20 @@ func (d *Datasource) query(_ context.Context, _ backend.PluginContext, dataQuery
 				backoffDuration = MAX_BACKOFF_DURATION
 			}
 			backend.Logger.Debug("query not finished, delaying/backing off", "backoffDuration", backoffDuration.String())
-			time.Sleep(backoffDuration)
+			select {
+			case <-ctx.Done():
+				err := ctx.Err()
+				if errors.Is(err, context.Canceled) {
+					err := d.SearchAPI.CancelQuery(jobId)
+					if err != nil {
+						backend.Logger.Warn("failed to cancel query", "jobId", jobId, "err", err)
+					}
+					backend.Logger.Warn("query canceled", "jobId", jobId, "err", err)
+					return backend.ErrDataResponse(backend.StatusBadRequest, "Query Canceled")
+				}
+			case <-time.After(backoffDuration):
+				continue
+			}
 			continue
 		}
 
