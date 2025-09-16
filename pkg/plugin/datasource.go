@@ -200,8 +200,9 @@ func (d *Datasource) query(ctx context.Context, _ backend.PluginContext, dataQue
 					err := d.SearchAPI.CancelQuery(jobId)
 					if err != nil {
 						backend.Logger.Warn("failed to cancel query", "jobId", jobId, "err", err)
+					} else {
+						backend.Logger.Info("query canceled", "jobId", jobId)
 					}
-					backend.Logger.Warn("query canceled", "jobId", jobId, "err", err)
 					return backend.ErrDataResponse(backend.StatusBadRequest, "Query Canceled")
 				}
 			case <-time.After(backoffDuration):
