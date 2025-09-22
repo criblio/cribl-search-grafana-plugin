@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strconv"
 	"time"
+	"errors"
 
 	"github.com/criblcloud/search-datasource/pkg/models"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -94,7 +95,7 @@ func (d *Datasource) QueryData(ctx context.Context, req *backend.QueryDataReques
 	return response, nil
 }
 
-func (d *Datasource) query(_ context.Context, _ backend.PluginContext, dataQuery backend.DataQuery) backend.DataResponse {
+func (d *Datasource) query(ctx context.Context, _ backend.PluginContext, dataQuery backend.DataQuery) backend.DataResponse {
 	var criblQuery models.CriblQuery
 	if err := json.Unmarshal(dataQuery.JSON, &criblQuery); err != nil {
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("failed to unmarshal CriblQuery: %v", err.Error()))
@@ -180,10 +181,7 @@ func (d *Datasource) query(_ context.Context, _ backend.PluginContext, dataQuery
 			// If there's a configured timeout, ensure we don't let the query run longer than that
 			if maxQueryDuration > 0 && elapsed >= maxQueryDuration {
 				backend.Logger.Debug("query timed out, canceling", "jobId", jobId)
-				err := d.SearchAPI.CancelQuery(jobId)
-				if err != nil {
-					backend.Logger.Warn("failed to cancel query", "jobId", jobId, "err", err)
-				}
+				d.cancelQuery(jobId, "query timed out")
 				return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("Job %s still not finished after %v (status=%v). Consider using a scheduled search to speed this up. https://docs.cribl.io/search/scheduled-searches/", jobId, maxQueryDuration, status))
 			}
 			a, b = b, a+b // Fibonacci backoff
@@ -192,7 +190,16 @@ func (d *Datasource) query(_ context.Context, _ backend.PluginContext, dataQuery
 				backoffDuration = MAX_BACKOFF_DURATION
 			}
 			backend.Logger.Debug("query not finished, delaying/backing off", "backoffDuration", backoffDuration.String())
-			time.Sleep(backoffDuration)
+			select {
+			case <-ctx.Done():
+				err := ctx.Err()
+				if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+					d.cancelQuery(jobId, err.Error())
+					return backend.ErrDataResponse(backend.StatusBadRequest, "Query Canceled")
+				}
+			case <-time.After(backoffDuration):
+				continue
+			}
 			continue
 		}
 
@@ -323,4 +330,15 @@ func (d *Datasource) handleSavedSearchIds(w http.ResponseWriter, r *http.Request
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(body)
 	w.WriteHeader(http.StatusOK)
+}
+
+
+func (d *Datasource) cancelQuery(jobId string, reason string) error {
+	err := d.SearchAPI.CancelQuery(jobId)
+	if err != nil {
+		backend.Logger.Warn("failed to cancel query", "jobId", jobId, "err", err)
+	} else {
+		backend.Logger.Info("query canceled", "jobId", jobId, "reason", reason)
+	}
+	return err
 }
