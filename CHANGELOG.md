@@ -24,3 +24,9 @@ Initial release.  Provides basic data source functionality of fetching saved/sch
 ## 1.1.3
 
 - Fix "time" field data type.
+
+
+## 1.1.4
+
+- Add cancel logic to the backend
+- Add cribl gov endpoints
