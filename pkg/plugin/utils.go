@@ -7,7 +7,6 @@ import (
 	"math"
 	"net/url"
 	"regexp"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -45,29 +44,11 @@ func canRunQuery(criblQuery *models.CriblQuery) error {
 	return nil
 }
 
-// Cribl Search backend requires a fully-formed query including the "cribl" operator.
-// Here we're applying best effort to auto-prepending the "cribl" operator where it needs to be.
-// This is far from 100% foolproof, but covers 99% of the happy paths.
-func prependCriblOperator(query string) string {
-	// This tries to capture the first word of the root query statement, along with any preceding
-	// "set" or "let" statements, and everything that comes after the first word.  NOTE: This doesn't
-	// touch any "let" statements.  We might enhance that in the future, but for now, users need to
-	// put their own "cribl" operator in those stage statements.
-	re := regexp.MustCompile(`^((?:\s*(?:set|let)\s+[^;]+;)*\s*)((\w+|['"*]).*)$`)
-	match := re.FindStringSubmatch(strings.TrimSpace(query))
-	if match != nil {
-		firstWord := match[3]
-		// We recognize certain operators that don't need "cribl" prepended
-		if !slices.Contains([]string{"cribl", "externaldata", "find", "print", "search", "range"}, firstWord) {
-			return fmt.Sprintf("%scribl %s", match[1], match[2])
-		}
-	}
-	return query
-}
-
-// Easier to troubleshoot a query from the logs when it's a single line, space instead of tab, etc.
-func collapseToSingleLine(query string) string {
-	return regexp.MustCompile("[\r\n\t]+").ReplaceAllString(query, " ")
+// Prepare a query for execution by collapsing it to a single line and adding a breadcrumb
+// to help identify queries from the Grafana plugin in the search job history.
+func prepareQuery(query string) string {
+	collapsed := regexp.MustCompile("[\r\n\t]+").ReplaceAllString(query, " ")
+	return collapsed + "\n// Grafana plugin"
 }
 
 // Convert the value of the "_time" field (expected to be in seconds) to a time.Time in UTC
