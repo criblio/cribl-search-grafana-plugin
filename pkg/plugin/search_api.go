@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,15 +17,29 @@ import (
 )
 
 func NewSearchAPI(settings *models.PluginSettings) *SearchAPI {
+	var httpClient *http.Client
+	if isLocalDevelopmentURL(settings.CriblOrgBaseUrl) {
+		// For local development, we need to skip TLS verification for self-signed certs
+		httpClient = &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
+		}
+	} else {
+		httpClient = http.DefaultClient
+	}
+
 	return &SearchAPI{
 		Settings:    settings,
 		BearerToken: nil,
+		httpClient:  httpClient,
 	}
 }
 
 type SearchAPI struct {
 	Settings    *models.PluginSettings
 	BearerToken *BearerToken
+	httpClient  *http.Client
 }
 
 type SearchQueryResult struct {
@@ -102,7 +117,7 @@ func (api *SearchAPI) doGET(uri string, queryParams *url.Values) ([]byte, error)
 		req.URL.RawQuery = queryParams.Encode()
 	}
 	backend.Logger.Debug("http GET", "URL", req.URL.String())
-	res, err := http.DefaultClient.Do(req)
+	res, err := api.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("GET request failed: %v", err.Error())
 	}
@@ -124,7 +139,7 @@ func (api *SearchAPI) doPOST(uri string, queryParams *url.Values, contentType st
 	}
 	req.Header.Set("Content-Type", contentType)
 	backend.Logger.Debug("http POST", "URL", req.URL.String(), "contentType", contentType)
-	res, err := http.DefaultClient.Do(req)
+	res, err := api.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("POST request failed: %v", err.Error())
 	}
@@ -175,9 +190,9 @@ func (api *SearchAPI) refreshBearerTokenAsNeeded() error {
 	backend.Logger.Debug("Refreshing bearer token")
 	var err error
 	if strings.HasSuffix(api.Settings.CriblOrgBaseUrl, ".cloud") { // i.e. foo.cribl.cloud or bar.cribl-staging.cloud
-		api.BearerToken, err = RefreshTokenViaOAuth(api.Settings.CriblOrgBaseUrl, api.Settings.ClientId, api.Settings.Secrets.ClientSecret)
+		api.BearerToken, err = RefreshTokenViaOAuth(api.Settings.CriblOrgBaseUrl, api.Settings.ClientId, api.Settings.Secrets.ClientSecret, api.httpClient)
 	} else {
-		api.BearerToken, err = RefreshTokenViaLocalAPI(api.Settings.CriblOrgBaseUrl, api.Settings.ClientId, api.Settings.Secrets.ClientSecret)
+		api.BearerToken, err = RefreshTokenViaLocalAPI(api.Settings.CriblOrgBaseUrl, api.Settings.ClientId, api.Settings.Secrets.ClientSecret, api.httpClient)
 	}
 	return err
 }

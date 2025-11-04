@@ -1,6 +1,8 @@
 package plugin
 
 import (
+	"crypto/tls"
+	"net/http"
 	"os"
 	"strings"
 	"testing"
@@ -18,7 +20,13 @@ func TestLocalAuth(t *testing.T) {
 	if password == "" {
 		password = "admin"
 	}
-	token, err := RefreshTokenViaLocalAPI(apiBaseUrl, username, password)
+	// Use HTTP client with InsecureSkipVerify for local testing
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	}
+	token, err := RefreshTokenViaLocalAPI(apiBaseUrl, username, password, httpClient)
 	if err != nil {
 		t.Fatalf("failed to refresh local auth token: %v", err.Error())
 	}
@@ -30,7 +38,9 @@ func TestCloudAuth(t *testing.T) {
 	if criblOrgBaseUrl == "" || clientId == "" || clientSecret == "" {
 		t.Skip("CRIBL_ORG_BASE_URL / CLIENT_ID / CLIENT_SECRET not defined, skipping cloud auth test")
 	}
-	token, err := RefreshTokenViaOAuth(criblOrgBaseUrl, clientId, clientSecret)
+	// Use default HTTP client for cloud auth
+	httpClient := http.DefaultClient
+	token, err := RefreshTokenViaOAuth(criblOrgBaseUrl, clientId, clientSecret, httpClient)
 	if err != nil {
 		t.Fatalf("failed to refresh local auth token: %v", err.Error())
 	}
