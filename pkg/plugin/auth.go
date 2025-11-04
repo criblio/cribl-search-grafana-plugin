@@ -31,11 +31,11 @@ func RefreshTokenViaOAuth(criblOrgBaseUrl string, clientId string, clientSecret 
 		audience = "https://api.cribl-staging.cloud"
 	} else if strings.HasSuffix(criblOrgBaseUrl, "cribl-gov-staging.cloud") {
 		wasGov = true
-		url = "https://criblgov-stg.okta.com/oauth2/default/v1/token"
+		url = "https://criblgov-stg.okta.com/oauth2/ausfridm9cpg2Y5nW4h7/v1/token"
 		audience = "https://api.cribl-gov-staging.cloud"
 	} else if strings.HasSuffix(criblOrgBaseUrl, "cribl-gov.cloud") {
 		wasGov = true
-		url = "https://criblgov-prod.okta.com/oauth2/default/v1/token"
+		url = "https://criblgov-prod.okta.com/oauth2/ausfuanngyqh8CJ6c4h7/v1/token"
 		audience = "https://api.cribl-gov.cloud"
 	} else {
 		url = "https://login.cribl.cloud/oauth/token"
