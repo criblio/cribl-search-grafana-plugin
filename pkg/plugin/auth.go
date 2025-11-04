@@ -61,6 +61,7 @@ func RefreshTokenViaOAuth(criblOrgBaseUrl string, clientId string, clientSecret 
 		return &BearerToken{}, fmt.Errorf("auth http error creating request: %v", err.Error())
 	}
 	req.Header.Set("Content-Type", requestEncoding)
+	req.Header.Set("User-Agent", getUserAgent())
 
 	res, err := httpClient.Do(req)
 	if err != nil {
@@ -102,6 +103,7 @@ func RefreshTokenViaLocalAPI(apiBaseUrl string, username string, password string
 		return &BearerToken{}, fmt.Errorf("login http error creating request: %v", err.Error())
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", getUserAgent())
 
 	res, err := httpClient.Do(req)
 	if err != nil {

@@ -7,6 +7,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestGetUserAgent(t *testing.T) {
+	// Test default version
+	assert.Equal(t, "cribl-search-grafana-plugin dev", getUserAgent())
+
+	// Test setting a specific version
+	SetVersion("1.42.0")
+	assert.Equal(t, "cribl-search-grafana-plugin 1.42.0", getUserAgent())
+
+	// Reset to dev for other tests
+	SetVersion("dev")
+}
+
 func TestParseErrorFromResponse(t *testing.T) {
 	for _, test := range []struct {
 		In       string

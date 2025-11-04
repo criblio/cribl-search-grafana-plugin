@@ -15,6 +15,19 @@ import (
 	"github.com/criblcloud/search-datasource/pkg/models"
 )
 
+// pluginVersion holds the version of the plugin, set at startup
+var pluginVersion = "dev"
+
+// SetVersion sets the plugin version (called from main)
+func SetVersion(version string) {
+	pluginVersion = version
+}
+
+// i.e. for use in composing the User-Agent header
+func GetVersion() string {
+	return pluginVersion
+}
+
 // Can the supplied query be run as-is?
 func canRunQuery(criblQuery *models.CriblQuery) error {
 	switch criblQuery.Type {
