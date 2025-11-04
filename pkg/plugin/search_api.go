@@ -116,6 +116,7 @@ func (api *SearchAPI) doGET(uri string, queryParams *url.Values) ([]byte, error)
 	if queryParams != nil {
 		req.URL.RawQuery = queryParams.Encode()
 	}
+	req.Header.Set("User-Agent", getUserAgent())
 	backend.Logger.Debug("http GET", "URL", req.URL.String())
 	res, err := api.httpClient.Do(req)
 	if err != nil {
@@ -138,6 +139,7 @@ func (api *SearchAPI) doPOST(uri string, queryParams *url.Values, contentType st
 		req.URL.RawQuery = queryParams.Encode()
 	}
 	req.Header.Set("Content-Type", contentType)
+	req.Header.Set("User-Agent", getUserAgent())
 	backend.Logger.Debug("http POST", "URL", req.URL.String(), "contentType", contentType)
 	res, err := api.httpClient.Do(req)
 	if err != nil {
@@ -218,4 +220,11 @@ func parseErrorFromResponse(body []byte) error {
 	}
 
 	return errors.New(jsonBody["message"].(string)) // not a JS Error, return the message as-is
+}
+
+func getUserAgent() string {
+	// NOTE: This format deviates slightly from the RFC format (space instead of slash),
+	// but that's deliberate.  Cribl has parsing for this specific format.  Hit up Dan
+	// for clarification if you have any questions.
+	return fmt.Sprintf("cribl-search-grafana-plugin %s", GetVersion())
 }
