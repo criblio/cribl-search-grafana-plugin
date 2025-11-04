@@ -3,12 +3,12 @@ package plugin
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
-	"errors"
 
 	"github.com/criblcloud/search-datasource/pkg/models"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -121,8 +121,7 @@ func (d *Datasource) query(ctx context.Context, _ backend.PluginContext, dataQue
 
 	queryParams := url.Values{}
 	if criblQuery.Type == "adhoc" {
-		// In the near future, clients won't need to prepend "cribl" but as of now they still do
-		queryParams.Set("query", prependCriblOperator(collapseToSingleLine(criblQuery.Query)))
+		queryParams.Set("query", prepareQuery(criblQuery.Query))
 		queryParams.Set("earliest", strconv.FormatInt(earliest, 10))
 		queryParams.Set("latest", strconv.FormatInt(latest, 10))
 	} else {
@@ -331,7 +330,6 @@ func (d *Datasource) handleSavedSearchIds(w http.ResponseWriter, r *http.Request
 	w.Write(body)
 	w.WriteHeader(http.StatusOK)
 }
-
 
 func (d *Datasource) cancelQuery(jobId string, reason string) error {
 	err := d.SearchAPI.CancelQuery(jobId)

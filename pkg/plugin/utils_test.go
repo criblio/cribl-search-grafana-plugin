@@ -31,36 +31,9 @@ func TestCanRunQuery(t *testing.T) {
 	}
 }
 
-func TestPrependCriblOperator(t *testing.T) {
-	for _, test := range []struct {
-		In       string
-		Expected string
-	}{
-		{
-			In:       `dataset="foo" | where something | timestats by level`,
-			Expected: `cribl dataset="foo" | where something | timestats by level`,
-		},
-		{
-			In:       `cribl something`,
-			Expected: `cribl something`,
-		},
-		{
-			In:       `set logger_level="debug"; dataset="foo"`,
-			Expected: `set logger_level="debug"; cribl dataset="foo"`,
-		},
-		{
-			In:       `set logger_level="debug";whatever`,
-			Expected: `set logger_level="debug";cribl whatever`,
-		},
-	} {
-		out := prependCriblOperator(test.In)
-		assert.Equal(t, test.Expected, out, test.In)
-	}
-}
-
-func TestCollapseToSingleLine(t *testing.T) {
-	assert.Equal(t, `hello there dude`, collapseToSingleLine("hello\nthere\ndude"))
-	assert.Equal(t, `hello there aw yeah`, collapseToSingleLine("hello\nthere\taw\r\nyeah"))
+func TestPrepareQuery(t *testing.T) {
+	assert.Equal(t, "hello there dude\n// Grafana plugin", prepareQuery("hello\nthere\ndude"))
+	assert.Equal(t, "hello there aw yeah\n// Grafana plugin", prepareQuery("hello\nthere\taw\r\nyeah"))
 }
 
 func TestCriblTimeToGrafanaTime(t *testing.T) {
