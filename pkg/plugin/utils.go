@@ -143,3 +143,14 @@ func isValidURL(rawURL string) bool {
 	u, err := url.Parse(rawURL)
 	return err == nil && (u.Scheme == "https" || u.Scheme == "http") && u.Host != ""
 }
+
+// Check if a URL is for local development (localhost or Docker internal networking)
+// Returns true if the hostname is "localhost" or "host.docker.internal"
+func isLocalDevelopmentURL(rawURL string) bool {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return false
+	}
+	hostname := u.Hostname()
+	return hostname == "localhost" || hostname == "host.docker.internal"
+}

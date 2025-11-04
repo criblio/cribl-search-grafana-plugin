@@ -168,3 +168,18 @@ func TestIsValidURL(t *testing.T) {
 	assert.True(t, isValidURL("http://hello"), "should be considered valid")
 	assert.True(t, isValidURL("https://hello.com"), "should be considered valid")
 }
+
+func TestIsLocalDevelopmentURL(t *testing.T) {
+	assert.False(t, isLocalDevelopmentURL(""), "empty string")
+	assert.False(t, isLocalDevelopmentURL("invalid url"), "invalid URL")
+	assert.False(t, isLocalDevelopmentURL("https://example.com"), "regular domain")
+	assert.False(t, isLocalDevelopmentURL("https://example.cribl.cloud"), "cloud domain")
+	assert.False(t, isLocalDevelopmentURL("https://192.168.1.1"), "IP address")
+	assert.False(t, isLocalDevelopmentURL("https://my-server.local"), "local domain")
+	assert.True(t, isLocalDevelopmentURL("http://localhost"), "localhost http")
+	assert.True(t, isLocalDevelopmentURL("https://localhost"), "localhost https")
+	assert.True(t, isLocalDevelopmentURL("https://localhost:9000"), "localhost with port")
+	assert.True(t, isLocalDevelopmentURL("http://host.docker.internal"), "docker internal http")
+	assert.True(t, isLocalDevelopmentURL("https://host.docker.internal"), "docker internal https")
+	assert.True(t, isLocalDevelopmentURL("https://host.docker.internal:9000"), "docker internal with port")
+}

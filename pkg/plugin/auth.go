@@ -22,7 +22,7 @@ type BearerToken struct {
 // Refresh an auth token via OAuth.  This is the normal way the plugin authenticates, using
 // cribl.cloud, cribl-staging.cloud, cribl-gov.cloud, or cribl-gov-staging.cloud depending on the value of criblOrgBaseUrl.
 // Upon success, returns an AuthToken which conveys the bearer token and an expiration time.
-func RefreshTokenViaOAuth(criblOrgBaseUrl string, clientId string, clientSecret string) (*BearerToken, error) {
+func RefreshTokenViaOAuth(criblOrgBaseUrl string, clientId string, clientSecret string, httpClient *http.Client) (*BearerToken, error) {
 	var url, audience, requestEncoding string
 	var wasGov bool = false
 	var requestBody []byte
@@ -48,14 +48,21 @@ func RefreshTokenViaOAuth(criblOrgBaseUrl string, clientId string, clientSecret 
 			"grant_type":    "client_credentials",
 			"client_id":     clientId,
 			"client_secret": clientSecret,
-				"audience":      audience,
+			"audience":      audience,
 		})
 		requestEncoding = "application/json"
 	} else {
 		requestBody = []byte(fmt.Sprintf("grant_type=client_credentials&client_id=%s&client_secret=%s&audience=%s", clientId, clientSecret, audience))
 		requestEncoding = "application/x-www-form-urlencoded"
 	}
-	res, err := http.Post(url, requestEncoding, bytes.NewBuffer(requestBody))
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return &BearerToken{}, fmt.Errorf("auth http error creating request: %v", err.Error())
+	}
+	req.Header.Set("Content-Type", requestEncoding)
+
+	res, err := httpClient.Do(req)
 	if err != nil {
 		return &BearerToken{}, fmt.Errorf("auth http error: %v", err.Error())
 	}
@@ -84,12 +91,19 @@ func RefreshTokenViaOAuth(criblOrgBaseUrl string, clientId string, clientSecret 
 // Refresh an auth token using the local API.  This is for local development and testing only.
 // This hits the login API relative to apiBaseUrl, using the supplied username and password.
 // Upon success, returns an AuthToken which conveys the bearer token and an expiration time.
-func RefreshTokenViaLocalAPI(apiBaseUrl string, username string, password string) (*BearerToken, error) {
+func RefreshTokenViaLocalAPI(apiBaseUrl string, username string, password string, httpClient *http.Client) (*BearerToken, error) {
 	loginUrl := fmt.Sprintf("%s/api/v1/auth/login", apiBaseUrl)
 	backend.Logger.Debug("Refreshing token via local API", "url", loginUrl)
 
 	requestBody, _ := json.Marshal(map[string]string{"username": username, "password": password})
-	res, err := http.Post(loginUrl, "application/json", bytes.NewBuffer(requestBody))
+
+	req, err := http.NewRequest("POST", loginUrl, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return &BearerToken{}, fmt.Errorf("login http error creating request: %v", err.Error())
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := httpClient.Do(req)
 	if err != nil {
 		return &BearerToken{}, fmt.Errorf("login http error: %v", err.Error())
 	}
