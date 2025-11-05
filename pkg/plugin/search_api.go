@@ -226,5 +226,5 @@ func getUserAgent() string {
 	// NOTE: This format deviates slightly from the RFC format (space instead of slash),
 	// but that's deliberate.  Cribl has parsing for this specific format.  Hit up Dan
 	// for clarification if you have any questions.
-	return fmt.Sprintf("cribl-search-grafana-plugin %s", GetVersion())
+	return fmt.Sprintf("cribl-search-grafana-plugin %s", GetPluginVersion())
 }

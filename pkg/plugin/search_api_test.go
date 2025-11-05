@@ -8,15 +8,12 @@ import (
 )
 
 func TestGetUserAgent(t *testing.T) {
-	// Test default version
-	assert.Equal(t, "cribl-search-grafana-plugin dev", getUserAgent())
-
-	// Test setting a specific version
-	SetVersion("1.42.0")
-	assert.Equal(t, "cribl-search-grafana-plugin 1.42.0", getUserAgent())
-
-	// Reset to dev for other tests
-	SetVersion("dev")
+	// Test that getUserAgent returns the expected format
+	// The version will be "dev" when buildinfo.GetBuildInfo() fails or during testing
+	userAgent := getUserAgent()
+	assert.Contains(t, userAgent, "cribl-search-grafana-plugin")
+	// Verify it matches the expected format: "cribl-search-grafana-plugin <version>"
+	assert.Regexp(t, `^cribl-search-grafana-plugin .+$`, userAgent)
 }
 
 func TestParseErrorFromResponse(t *testing.T) {

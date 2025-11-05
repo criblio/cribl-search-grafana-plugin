@@ -12,19 +12,16 @@ import (
 	"time"
 
 	"github.com/criblcloud/search-datasource/pkg/models"
+	"github.com/grafana/grafana-plugin-sdk-go/build/buildinfo"
 )
 
-// pluginVersion holds the version of the plugin, set at startup
-var pluginVersion = "dev"
-
-// SetVersion sets the plugin version (called from main)
-func SetVersion(version string) {
-	pluginVersion = version
-}
-
-// i.e. for use in composing the User-Agent header
-func GetVersion() string {
-	return pluginVersion
+// GetPluginVersion returns the plugin version from build info
+func GetPluginVersion() string {
+	buildInfo, err := buildinfo.GetBuildInfo()
+	if err != nil {
+		return "dev"
+	}
+	return buildInfo.Version
 }
 
 // Can the supplied query be run as-is?
