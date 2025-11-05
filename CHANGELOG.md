@@ -30,3 +30,11 @@ Initial release.  Provides basic data source functionality of fetching saved/sch
 
 - Add cancel logic to the backend
 - Add cribl gov endpoints
+
+## 1.1.5
+
+- Fix bug: OAuth for cribl gov wasn't working properly.
+- Fix bug: cloud org URL detection failed when there was a trailing slash (without any other path).
+- Add a pre-provisioned sample dashboard.
+- Better differentiation of plugin activity vs. regular Cribl UI activity.
+- Enable local plugin development when using self-signed certs.
