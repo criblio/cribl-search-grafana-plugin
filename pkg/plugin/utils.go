@@ -13,6 +13,7 @@ import (
 
 	"github.com/criblcloud/search-datasource/pkg/models"
 	"github.com/grafana/grafana-plugin-sdk-go/build/buildinfo"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
 // GetPluginVersion returns the plugin version from build info
@@ -76,23 +77,52 @@ func criblTimeToGrafanaTime(timeValue interface{}) (bool, time.Time) {
 func makeEmptyConcreteTypeArray(val interface{}) (interface{}, error) {
 	switch t := val.(type) {
 	case string:
-		return []string{}, nil
+		return []*string{}, nil
 	case float64:
-		return []float64{}, nil
+		return []*float64{}, nil
 	case bool:
-		return []bool{}, nil
+		return []*bool{}, nil
 	case time.Time:
-		return []time.Time{}, nil
+		return []*time.Time{}, nil
 	default:
 		return nil, fmt.Errorf("unsupported type: %T (%v)", t, t)
 	}
 }
 
-// Grafana doesn't like nested values.  If a field value is an object, flatten it
-// to a string by serializing it to JSON.
+func safeAppendToField(field *data.Field, value interface{}) {
+	switch field.Type() {
+	case data.FieldTypeNullableString:
+		if v, ok := value.(string); ok {
+			field.Append(&v)
+		} else {
+			field.Append((*string)(nil))
+		}
+	case data.FieldTypeNullableFloat64:
+		if v, ok := value.(float64); ok {
+			field.Append(&v)
+		} else {
+			field.Append((*float64)(nil))
+		}
+	case data.FieldTypeNullableBool:
+		if v, ok := value.(bool); ok {
+			field.Append(&v)
+		} else {
+			field.Append((*bool)(nil))
+		}
+	case data.FieldTypeNullableTime:
+		if v, ok := value.(time.Time); ok {
+			field.Append(&v)
+		} else {
+			field.Append((*time.Time)(nil))
+		}
+	}
+}
+
+// Grafana doesn't like nested values.  If a field value is an object or array,
+// flatten it to a string by serializing it to JSON.
 func flattenNestedObjectToString(val interface{}) interface{} {
 	switch val.(type) {
-	case map[string]interface{}:
+	case map[string]interface{}, []interface{}:
 		if b, err := json.Marshal(val); err == nil {
 			return string(b)
 		}
