@@ -244,7 +244,7 @@ func (d *Datasource) query(ctx context.Context, _ backend.PluginContext, dataQue
 					backend.Logger.Debug("adding field", "fieldName", fieldName)
 					frame.Fields = append(frame.Fields, field)
 				}
-				field.Append(value)
+				safeAppendToField(field, value)
 
 				// Track min/max if it's a number field
 				switch f := value.(type) {
