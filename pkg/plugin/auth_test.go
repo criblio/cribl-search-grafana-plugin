@@ -23,7 +23,7 @@ func TestLocalAuth(t *testing.T) {
 	// Use HTTP client with InsecureSkipVerify for local testing
 	httpClient := &http.Client{
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 -- test code connecting to local dev server
 		},
 	}
 	token, err := RefreshTokenViaLocalAPI(apiBaseUrl, username, password, httpClient)

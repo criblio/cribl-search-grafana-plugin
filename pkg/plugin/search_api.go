@@ -22,7 +22,7 @@ func NewSearchAPI(settings *models.PluginSettings) *SearchAPI {
 		// For local development, we need to skip TLS verification for self-signed certs
 		httpClient = &http.Client{
 			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 -- only used for localhost/docker-internal dev URLs
 			},
 		}
 	} else {
