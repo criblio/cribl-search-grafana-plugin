@@ -55,7 +55,7 @@ var resultsCounter = promauto.NewCounterVec(
 type Datasource struct {
 	ResourceHandler backend.CallResourceHandler
 	Settings        *models.PluginSettings
-	SearchAPI       *SearchAPI
+	SearchAPI       SearchAPIClient
 }
 
 // NewDatasource creates a new datasource instance.
@@ -137,6 +137,25 @@ func (d *Datasource) query(ctx context.Context, _ backend.PluginContext, dataQue
 		maxQueryDuration = time.Duration(*d.Settings.QueryTimeoutSec * 1e9)
 	}
 	backend.Logger.Info("timeout will be", "maxQueryDuration", maxQueryDuration, "queryTimeoutSec", d.Settings.QueryTimeoutSec)
+
+	// Grafana's context typically has a short deadline (e.g. 60s) that would override our
+	// configured query timeout.  When queryTimeoutSec is set, create a new context with
+	// the plugin's timeout, detached from Grafana's deadline but still cancelled if Grafana
+	// cancels (e.g. user navigates away).
+	if maxQueryDuration > 0 {
+		grafanaCtx := ctx
+		queryCtx, cancel := context.WithTimeout(context.Background(), maxQueryDuration)
+		defer cancel()
+		go func() {
+			select {
+			case <-grafanaCtx.Done():
+				cancel()
+			case <-queryCtx.Done():
+			}
+		}()
+		ctx = queryCtx
+	}
+
 	startTime := time.Now()
 
 	// Load the search results, paging through until we've hit MAX_RESULTS or read all events, whatever comes first
@@ -145,7 +164,7 @@ func (d *Datasource) query(ctx context.Context, _ backend.PluginContext, dataQue
 		queryParams.Set("offset", strconv.Itoa(eventCount))
 		queryParams.Set("limit", strconv.Itoa(MAX_RESULTS))
 
-		result, err := d.SearchAPI.RunQueryAndGetResults(&queryParams)
+		result, err := d.SearchAPI.RunQueryAndGetResults(ctx, &queryParams)
 		if err != nil {
 			backend.Logger.Debug("query failed", "err", err)
 			return backend.ErrDataResponse(backend.StatusBadRequest, err.Error())
@@ -194,6 +213,9 @@ func (d *Datasource) query(ctx context.Context, _ backend.PluginContext, dataQue
 				err := ctx.Err()
 				if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 					d.cancelQuery(jobId, err.Error())
+					if errors.Is(err, context.DeadlineExceeded) && maxQueryDuration > 0 {
+						return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("Job %s still not finished after %v (status=%v). Consider using a scheduled search to speed this up. https://docs.cribl.io/search/scheduled-searches/", jobId, maxQueryDuration, status))
+					}
 					return backend.ErrDataResponse(backend.StatusBadRequest, "Query Canceled")
 				}
 			case <-time.After(backoffDuration):
@@ -291,7 +313,7 @@ func (d *Datasource) query(ctx context.Context, _ backend.PluginContext, dataQue
 // The main use case for these health checks is the test button on the
 // datasource configuration page which allows users to verify that
 // a datasource is working as expected.
-func (d *Datasource) CheckHealth(_ context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+func (d *Datasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
 	res := &backend.CheckHealthResult{}
 
 	if !isValidURL(d.Settings.CriblOrgBaseUrl) {
@@ -302,7 +324,7 @@ func (d *Datasource) CheckHealth(_ context.Context, req *backend.CheckHealthRequ
 
 	// We test the data source by loading saved search IDs.  This ensures the creds
 	// are valid and we'll be able to make API calls successfully.
-	_, err := d.SearchAPI.LoadSavedSearchIds()
+	_, err := d.SearchAPI.LoadSavedSearchIds(ctx)
 	if err != nil {
 		res.Status = backend.HealthStatusError
 		res.Message = err.Error()
@@ -320,7 +342,7 @@ func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResource
 }
 
 func (d *Datasource) handleSavedSearchIds(w http.ResponseWriter, r *http.Request) {
-	ids, err := d.SearchAPI.LoadSavedSearchIds()
+	ids, err := d.SearchAPI.LoadSavedSearchIds(r.Context())
 	if err != nil {
 		backend.Logger.Error("error loading saved search IDs", "err", err)
 		return
@@ -332,7 +354,9 @@ func (d *Datasource) handleSavedSearchIds(w http.ResponseWriter, r *http.Request
 }
 
 func (d *Datasource) cancelQuery(jobId string, reason string) error {
-	err := d.SearchAPI.CancelQuery(jobId)
+	cancelCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	err := d.SearchAPI.CancelQuery(cancelCtx, jobId)
 	if err != nil {
 		backend.Logger.Warn("failed to cancel query", "jobId", jobId, "err", err)
 	} else {

@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
@@ -15,6 +16,12 @@ import (
 	"github.com/criblcloud/search-datasource/pkg/models"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 )
+
+type SearchAPIClient interface {
+	RunQueryAndGetResults(ctx context.Context, queryParams *url.Values) (*SearchQueryResult, error)
+	CancelQuery(ctx context.Context, jobId string) error
+	LoadSavedSearchIds(ctx context.Context) ([]string, error)
+}
 
 func NewSearchAPI(settings *models.PluginSettings) *SearchAPI {
 	var httpClient *http.Client
@@ -50,8 +57,8 @@ type SearchQueryResult struct {
 // Run a search query and return the header event + result events.  The queryParams arg is
 // expected to have params such as query + earlieset + latest, or a savedSearchId, and
 // any offset + limit as needed.  This simply makes the API request and parses the response.
-func (api *SearchAPI) RunQueryAndGetResults(queryParams *url.Values) (*SearchQueryResult, error) {
-	responseBytes, err := api.doGET("/api/v1/m/default_search/search/query", queryParams)
+func (api *SearchAPI) RunQueryAndGetResults(ctx context.Context, queryParams *url.Values) (*SearchQueryResult, error) {
+	responseBytes, err := api.doGET(ctx, "/api/v1/m/default_search/search/query", queryParams)
 	if err != nil {
 		return nil, err
 	}
@@ -76,16 +83,16 @@ func (api *SearchAPI) RunQueryAndGetResults(queryParams *url.Values) (*SearchQue
 }
 
 // Cancel a search query.
-func (api *SearchAPI) CancelQuery(jobId string) error {
-	_, err := api.doPOST(fmt.Sprintf("/api/v1/m/default_search/search/jobs/%s/cancel", jobId), nil, "application/json", []byte("{}"))
+func (api *SearchAPI) CancelQuery(ctx context.Context, jobId string) error {
+	_, err := api.doPOST(ctx, fmt.Sprintf("/api/v1/m/default_search/search/jobs/%s/cancel", jobId), nil, "application/json", []byte("{}"))
 	return err
 }
 
 // Load the list of saved search IDs available to the user corresponding to the API creds.
 // This can be used to populate a dropdown to make it easy for the user to pick one.
 // Returns a list of saved search IDs.
-func (api *SearchAPI) LoadSavedSearchIds() ([]string, error) {
-	responseBytes, err := api.doGET("/api/v1/m/default_search/search/saved", nil)
+func (api *SearchAPI) LoadSavedSearchIds(ctx context.Context) ([]string, error) {
+	responseBytes, err := api.doGET(ctx, "/api/v1/m/default_search/search/saved", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load saved search ids: %v", err.Error())
 	}
@@ -104,8 +111,8 @@ func (api *SearchAPI) LoadSavedSearchIds() ([]string, error) {
 }
 
 // Perform a GET request to the API, returning the raw response body as a byte array
-func (api *SearchAPI) doGET(uri string, queryParams *url.Values) ([]byte, error) {
-	req, err := http.NewRequest("GET", api.url(uri), nil)
+func (api *SearchAPI) doGET(ctx context.Context, uri string, queryParams *url.Values) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", api.url(uri), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create GET request: %v", err.Error())
 	}
@@ -126,8 +133,8 @@ func (api *SearchAPI) doGET(uri string, queryParams *url.Values) ([]byte, error)
 }
 
 // Perform a GET request to the API, returning the raw response body as a byte array
-func (api *SearchAPI) doPOST(uri string, queryParams *url.Values, contentType string, data []byte) ([]byte, error) {
-	req, err := http.NewRequest("POST", api.url(uri), bytes.NewBuffer(data))
+func (api *SearchAPI) doPOST(ctx context.Context, uri string, queryParams *url.Values, contentType string, data []byte) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, "POST", api.url(uri), bytes.NewBuffer(data))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create POST request: %v", err.Error())
 	}
